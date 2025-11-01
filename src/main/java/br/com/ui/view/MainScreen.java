@@ -20,72 +20,94 @@ public class MainScreen extends JFrame {
             e.printStackTrace();
         }
 
+        // Cores
+        Color background = new Color(240, 240, 240);
+        Color primary = new Color(163, 31, 52);
+        Color secondary = new Color(0, 153, 102);
+        Color textOnDark = Color.WHITE;
+
         Container contentPane = getContentPane();
-        contentPane.setLayout(new BorderLayout(20, 20));
-        contentPane.setBackground(new Color(43, 43, 43)); // Fundo cinza escuro
+        contentPane.setBackground(background);
 
-        // Painel superior para o nome do usuário e botão de logout
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(new Color(43, 43, 43));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        // --- Painel do Cabeçalho ---
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(primary);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        JLabel userLabel = new JLabel("Bem-vindo, " + loggedInUsername + "!", SwingConstants.LEFT);
-        userLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        userLabel.setForeground(Color.WHITE);
-        topPanel.add(userLabel, BorderLayout.WEST);
+        JLabel userLabel = new JLabel("Usuário: " + loggedInUsername, SwingConstants.LEFT);
+        userLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        userLabel.setForeground(textOnDark);
+        headerPanel.add(userLabel, BorderLayout.WEST);
 
-        JButton logoutButton = createMenuButton("Sair");
-        logoutButton.setPreferredSize(new Dimension(120, 40));
+        JLabel titleLabel = new JLabel("Painel de Gerenciamento", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setForeground(textOnDark);
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+
+        JButton logoutButton = new JButton("Sair");
+        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.setForeground(primary); // Texto do botão de sair em Vermelho Escuro
+        logoutButton.setBackground(background); // Fundo claro para contraste
+        logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         logoutButton.addActionListener(e -> {
             this.dispose();
             new LoginScreen().setVisible(true);
         });
-        JPanel logoutButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        logoutButtonPanel.setOpaque(false);
-        logoutButtonPanel.add(logoutButton);
-        topPanel.add(logoutButtonPanel, BorderLayout.EAST);
-
-        JLabel headerLabel = new JLabel("PDV Posto de Combustível", SwingConstants.CENTER);
-        headerLabel.setFont(new Font("Arial", Font.BOLD, 32));
-        headerLabel.setForeground(new Color(255, 204, 0)); // Texto amarelo
-
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false);
-        headerPanel.add(topPanel, BorderLayout.NORTH);
-        headerPanel.add(headerLabel, BorderLayout.CENTER);
+        headerPanel.add(logoutButton, BorderLayout.EAST);
 
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
-        JPanel buttonWrapperPanel = new JPanel(new GridBagLayout());
-        buttonWrapperPanel.setOpaque(false);
-        contentPane.add(buttonWrapperPanel, BorderLayout.CENTER);
-
-        // Layout atualizado para 7 botões
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(4, 2, 15, 15)); // 4 linhas, 2 colunas
+        // --- Painel de Botões com GridBagLayout ---
+        JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
-        buttonWrapperPanel.add(buttonPanel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Botões
-        JButton productButton = createMenuButton("Gerenciamento de Produtos");
-        JButton customerButton = createMenuButton("Gerenciamento de Clientes");
-        JButton stockButton = createMenuButton("Gerenciamento de Estoque");
-        JButton contactButton = createMenuButton("Gerenciamento de Contatos");
-        JButton costButton = createMenuButton("Gerenciamento de Custos");
-        JButton priceButton = createMenuButton("Gerenciamento de Preços");
-        JButton accessButton = createMenuButton("Gerenciamento de Acesso");
+        JButton productButton = createMenuButton("Gerenciamento de Produtos", secondary, textOnDark);
+        JButton customerButton = createMenuButton("Gerenciamento de Clientes", secondary, textOnDark);
+        JButton stockButton = createMenuButton("Gerenciamento de Estoque", secondary, textOnDark);
+        JButton contactButton = createMenuButton("Gerenciamento de Contatos", secondary, textOnDark);
+        JButton costButton = createMenuButton("Gerenciamento de Custos", secondary, textOnDark);
+        JButton priceButton = createMenuButton("Gerenciamento de Preços", secondary, textOnDark);
+        JButton accessButton = createMenuButton("Gerenciamento de Acesso", primary, textOnDark);
 
-        buttonPanel.add(productButton);
-        buttonPanel.add(customerButton);
-        buttonPanel.add(stockButton);
-        buttonPanel.add(contactButton);
-        buttonPanel.add(costButton);
-        buttonPanel.add(priceButton);
-        buttonPanel.add(accessButton);
+        // Adicionando botões ao painel com GridBagConstraints
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        buttonPanel.add(productButton, gbc);
 
+        gbc.gridx = 1;
+        buttonPanel.add(customerButton, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        buttonPanel.add(stockButton, gbc);
+
+        gbc.gridx = 1;
+        buttonPanel.add(contactButton, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        buttonPanel.add(costButton, gbc);
+
+        gbc.gridx = 1;
+        buttonPanel.add(priceButton, gbc);
+
+        // Botão de Acesso centralizado
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        buttonPanel.add(accessButton, gbc);
+
+        contentPane.add(buttonPanel, BorderLayout.CENTER);
+
+        // --- Rodapé ---
         JLabel footerLabel = new JLabel("Versão 1.0.0", SwingConstants.CENTER);
         footerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        footerLabel.setForeground(Color.LIGHT_GRAY);
+        footerLabel.setForeground(Color.GRAY);
         footerLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         contentPane.add(footerLabel, BorderLayout.SOUTH);
 
@@ -99,19 +121,18 @@ public class MainScreen extends JFrame {
         accessButton.addActionListener(e -> new GerenciamentoAcessoScreen().setVisible(true));
     }
 
-    private JButton createMenuButton(String text) {
+    private JButton createMenuButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 16));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setPreferredSize(new Dimension(300, 70));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0)); // Fundo amarelo
-        button.setForeground(Color.BLACK); // Texto preto
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2)); // Borda laranja
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
     }
 
-    // O método main é apenas para teste isolado
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new MainScreen("Admin").setVisible(true);

@@ -18,54 +18,51 @@ public class EstoqueScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // --- Cores ---
-        Color background = new Color(43, 43, 43);
-        Color panelBackground = new Color(60, 63, 65);
-        Color textColor = Color.WHITE;
-        Color buttonBackground = new Color(255, 204, 0);
-        Color buttonForeground = Color.BLACK;
+        // Cores
+        Color background = new Color(240, 240, 240);
+        Color primary = new Color(163, 31, 52);
+        Color secondary = new Color(0, 153, 102);
+        Color text = new Color(51, 51, 51);
+        Color textOnDark = Color.WHITE;
+        Color accent = new Color(255, 204, 0);
 
-        // --- Layout Principal ---
         Container contentPane = getContentPane();
         contentPane.setBackground(background);
-        contentPane.setLayout(new BorderLayout(10, 10));
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        fieldsPanel.setBackground(background);
-        TitledBorder titledBorder = BorderFactory.createTitledBorder("Dados do Estoque");
-        titledBorder.setTitleColor(textColor);
+        fieldsPanel.setBackground(Color.WHITE);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(10, 10, 10, 10),
-                titledBorder
+                BorderFactory.createTitledBorder(null, "Dados do Estoque", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Quantidade:"));
+        fieldsPanel.add(createStyledLabel("Quantidade:", text));
         quantidadeField = createStyledTextField();
         fieldsPanel.add(quantidadeField);
 
-        fieldsPanel.add(createStyledLabel("Local do Tanque:"));
+        fieldsPanel.add(createStyledLabel("Local do Tanque:", text));
         localTanqueField = createStyledTextField();
         fieldsPanel.add(localTanqueField);
 
-        fieldsPanel.add(createStyledLabel("Endereço do Local:"));
+        fieldsPanel.add(createStyledLabel("Endereço do Local:", text));
         localEnderecoField = createStyledTextField();
         fieldsPanel.add(localEnderecoField);
 
-        fieldsPanel.add(createStyledLabel("Lote de Fabricação:"));
+        fieldsPanel.add(createStyledLabel("Lote de Fabricação:", text));
         loteFabricacaoField = createStyledTextField();
         fieldsPanel.add(loteFabricacaoField);
 
-        fieldsPanel.add(createStyledLabel("Data de Validade (yyyy-mm-dd):"));
+        fieldsPanel.add(createStyledLabel("Data de Validade (yyyy-mm-dd):", text));
         dataValidadeField = createStyledTextField();
         fieldsPanel.add(dataValidadeField);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonsPanel.setBackground(background);
-        JButton novoButton = createStyledButton("Novo");
-        JButton salvarButton = createStyledButton("Salvar");
-        JButton excluirButton = createStyledButton("Excluir");
+        buttonsPanel.setOpaque(false);
+        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
+        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
+        JButton excluirButton = createStyledButton("Excluir", accent, text);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -76,27 +73,24 @@ public class EstoqueScreen extends JFrame {
         tabelaEstoque = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaEstoque.setBackground(panelBackground);
-        tabelaEstoque.setForeground(textColor);
-        tabelaEstoque.setGridColor(new Color(80, 80, 80));
-        tabelaEstoque.setSelectionBackground(buttonBackground);
-        tabelaEstoque.setSelectionForeground(buttonForeground);
+        tabelaEstoque.setBackground(Color.WHITE);
+        tabelaEstoque.setForeground(text);
+        tabelaEstoque.setGridColor(Color.LIGHT_GRAY);
+        tabelaEstoque.setSelectionBackground(accent);
+        tabelaEstoque.setSelectionForeground(text);
         tabelaEstoque.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaEstoque.setRowHeight(25);
 
-        // Estilo do Header da Tabela
         JTableHeader tableHeader = tabelaEstoque.getTableHeader();
-        tableHeader.setBackground(new Color(80, 80, 80));
-        tableHeader.setForeground(buttonBackground); // Yellow text
+        tableHeader.setBackground(primary);
+        tableHeader.setForeground(textOnDark);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaEstoque);
-        tableScrollPane.getViewport().setBackground(background);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(panelBackground, 2));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-        // Adiciona um espaçamento geral
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(background);
+        mainPanel.setOpaque(false);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         mainPanel.add(fieldsPanel, BorderLayout.NORTH);
         mainPanel.add(tableScrollPane, BorderLayout.CENTER);
@@ -109,7 +103,7 @@ public class EstoqueScreen extends JFrame {
 
         salvarButton.addActionListener(e -> {
             String[] rowData = {
-                String.valueOf(tableModel.getRowCount() + 1), // ID temporário
+                String.valueOf(tableModel.getRowCount() + 1),
                 quantidadeField.getText(),
                 localTanqueField.getText(),
                 localEnderecoField.getText(),
@@ -141,35 +135,31 @@ public class EstoqueScreen extends JFrame {
         });
     }
 
-    private JLabel createStyledLabel(String text) {
+    private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
+        label.setForeground(color);
         label.setFont(new Font("Arial", Font.BOLD, 14));
         return label;
     }
 
     private JTextField createStyledTextField() {
-        JTextField textField = new JTextField();
-        textField.setBackground(new Color(60, 63, 65));
-        textField.setForeground(Color.WHITE);
-        textField.setCaretColor(Color.WHITE);
+        JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(Color.GRAY, 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
     }
 
-    private JButton createStyledButton(String text) {
+    private JButton createStyledButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0));
-        button.setForeground(Color.BLACK);
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2));
-        button.setPreferredSize(new Dimension(120, 40));
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
     }
 

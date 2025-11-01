@@ -31,46 +31,43 @@ public class CustoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // --- Cores ---
-        Color background = new Color(43, 43, 43);
-        Color panelBackground = new Color(60, 63, 65);
-        Color textColor = Color.WHITE;
-        Color buttonBackground = new Color(255, 204, 0);
-        Color buttonForeground = Color.BLACK;
+        // Cores
+        Color background = new Color(240, 240, 240);
+        Color primary = new Color(163, 31, 52);
+        Color secondary = new Color(0, 153, 102);
+        Color text = new Color(51, 51, 51);
+        Color textOnDark = Color.WHITE;
+        Color accent = new Color(255, 204, 0);
 
-        // --- Layout Principal ---
         Container contentPane = getContentPane();
         contentPane.setBackground(background);
-        contentPane.setLayout(new BorderLayout(10, 10));
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        fieldsPanel.setBackground(background);
-        TitledBorder titledBorder = BorderFactory.createTitledBorder("Dados do Custo");
-        titledBorder.setTitleColor(textColor);
+        fieldsPanel.setBackground(Color.WHITE);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(10, 10, 10, 10),
-                titledBorder
+                BorderFactory.createTitledBorder(null, "Dados do Custo", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Descrição (ex: Conta de Água):"));
+        fieldsPanel.add(createStyledLabel("Descrição (ex: Conta de Água):", text));
         descricaoField = createStyledTextField();
         fieldsPanel.add(descricaoField);
 
-        fieldsPanel.add(createStyledLabel("Valor (ex: 480.50):"));
+        fieldsPanel.add(createStyledLabel("Valor (ex: 480.50):", text));
         valorField = createStyledTextField();
         fieldsPanel.add(valorField);
 
-        fieldsPanel.add(createStyledLabel("Data de Vencimento (dd/mm/yyyy):"));
+        fieldsPanel.add(createStyledLabel("Data de Vencimento (dd/mm/yyyy):", text));
         dataVencimentoField = createStyledTextField();
         fieldsPanel.add(dataVencimentoField);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonsPanel.setBackground(background);
-        JButton novoButton = createStyledButton("Novo");
-        JButton salvarButton = createStyledButton("Salvar");
-        JButton excluirButton = createStyledButton("Excluir");
+        buttonsPanel.setOpaque(false);
+        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
+        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
+        JButton excluirButton = createStyledButton("Excluir", accent, text);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -84,27 +81,24 @@ public class CustoScreen extends JFrame {
         tabelaCustos = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaCustos.setBackground(panelBackground);
-        tabelaCustos.setForeground(textColor);
-        tabelaCustos.setGridColor(new Color(80, 80, 80));
-        tabelaCustos.setSelectionBackground(buttonBackground);
-        tabelaCustos.setSelectionForeground(buttonForeground);
+        tabelaCustos.setBackground(Color.WHITE);
+        tabelaCustos.setForeground(text);
+        tabelaCustos.setGridColor(Color.LIGHT_GRAY);
+        tabelaCustos.setSelectionBackground(accent);
+        tabelaCustos.setSelectionForeground(text);
         tabelaCustos.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaCustos.setRowHeight(25);
 
-        // Estilo do Header da Tabela
         JTableHeader tableHeader = tabelaCustos.getTableHeader();
-        tableHeader.setBackground(new Color(80, 80, 80));
-        tableHeader.setForeground(buttonBackground); // Yellow text
+        tableHeader.setBackground(primary);
+        tableHeader.setForeground(textOnDark);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaCustos);
-        tableScrollPane.getViewport().setBackground(background);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(panelBackground, 2));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
-        // Adiciona um espaçamento geral
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(background);
+        mainPanel.setOpaque(false);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         mainPanel.add(fieldsPanel, BorderLayout.NORTH);
         mainPanel.add(tableScrollPane, BorderLayout.CENTER);
@@ -118,45 +112,39 @@ public class CustoScreen extends JFrame {
         excluirButton.addActionListener(e -> excluirCusto());
         tabelaCustos.getSelectionModel().addListSelectionListener(e -> preencherCamposComSelecao());
 
-        // Carrega os dados iniciais (empty for now)
         carregarCustos();
     }
 
-    private JLabel createStyledLabel(String text) {
+    private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
+        label.setForeground(color);
         label.setFont(new Font("Arial", Font.BOLD, 14));
         return label;
     }
 
     private JTextField createStyledTextField() {
-        JTextField textField = new JTextField();
-        textField.setBackground(new Color(60, 63, 65));
-        textField.setForeground(Color.WHITE);
-        textField.setCaretColor(Color.WHITE);
+        JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(Color.GRAY, 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
     }
 
-    private JButton createStyledButton(String text) {
+    private JButton createStyledButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0));
-        button.setForeground(Color.BLACK);
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2));
-        button.setPreferredSize(new Dimension(120, 40));
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
     }
 
     private void carregarCustos() {
         tableModel.setRowCount(0);
-        // In a real application, this would load data from a service
         for (Custo c : custos) {
             tableModel.addRow(new Object[]{
                 c.getId(),
@@ -169,7 +157,6 @@ public class CustoScreen extends JFrame {
 
     private void salvarCusto() {
         try {
-            // Remove formatação de moeda para fazer o parse
             String valorTexto = valorField.getText().replaceAll("[^0-9,.]", "").replace(".", "").replace(",", ".");
             Custo novoCusto = new Custo(
                 nextCustoId++,
@@ -207,7 +194,7 @@ public class CustoScreen extends JFrame {
 
             if (custoSelecionado != null) {
                 descricaoField.setText(custoSelecionado.getDescricao());
-                valorField.setText(custoSelecionado.getValor().toPlainString()); // Usa toPlainString para evitar notação científica
+                valorField.setText(custoSelecionado.getValor().toPlainString());
                 dataVencimentoField.setText(custoSelecionado.getDataVencimento().format(dateFormatter));
             }
         }

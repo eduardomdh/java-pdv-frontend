@@ -62,9 +62,7 @@ public class LoginScreen extends JFrame {
         contentPane.add(formPanel, BorderLayout.CENTER);
 
         // Adicionar listener ao botão de login
-        loginButton.addActionListener(e -> {
-            authenticateUser();
-        });
+        loginButton.addActionListener(e -> authenticateUser());
     }
 
     private JLabel createStyledLabel(String text) {
@@ -122,7 +120,6 @@ public class LoginScreen extends JFrame {
             User user = userOpt.get();
             String role = user.getTipoAcesso();
 
-            JOptionPane.showMessageDialog(this, "Login bem-sucedido! Perfil: " + role, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             this.dispose();
 
             if ("funcionario".equals(role)) {

@@ -10,7 +10,6 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ProdutoScreen extends JFrame {
 
@@ -28,58 +27,69 @@ public class ProdutoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // --- Cores ---
-        Color background = new Color(43, 43, 43);
-        Color panelBackground = new Color(60, 63, 65);
-        Color textColor = Color.WHITE;
-        Color buttonBackground = new Color(255, 204, 0);
-        Color buttonForeground = Color.BLACK;
+        // Cores
+        Color background = new Color(240, 240, 240);
+        Color primary = new Color(163, 31, 52);
+        Color secondary = new Color(0, 153, 102);
+        Color text = new Color(51, 51, 51);
+        Color textOnDark = Color.WHITE;
+        Color accent = new Color(255, 204, 0);
 
-        // --- Layout Principal ---
         Container contentPane = getContentPane();
         contentPane.setBackground(background);
-        contentPane.setLayout(new BorderLayout(10, 10));
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
-        fieldsPanel.setBackground(background);
-        TitledBorder titledBorder = BorderFactory.createTitledBorder("Dados do Produto");
-        titledBorder.setTitleColor(textColor);
+        fieldsPanel.setBackground(Color.WHITE);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(10, 10, 10, 10),
-                titledBorder
+                BorderFactory.createTitledBorder(null, "Dados do Produto", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Nome:"));
+        fieldsPanel.add(createStyledLabel("Nome:", text));
         nomeField = createStyledTextField();
         fieldsPanel.add(nomeField);
 
-        fieldsPanel.add(createStyledLabel("Referência:"));
+        fieldsPanel.add(createStyledLabel("Referência:", text));
         referenciaField = createStyledTextField();
         fieldsPanel.add(referenciaField);
 
-        fieldsPanel.add(createStyledLabel("Fornecedor:"));
+        fieldsPanel.add(createStyledLabel("Fornecedor:", text));
         fornecedorField = createStyledTextField();
         fieldsPanel.add(fornecedorField);
 
-        fieldsPanel.add(createStyledLabel("Marca:"));
+        fieldsPanel.add(createStyledLabel("Marca:", text));
         marcaField = createStyledTextField();
         fieldsPanel.add(marcaField);
 
-        fieldsPanel.add(createStyledLabel("Categoria:"));
+        fieldsPanel.add(createStyledLabel("Categoria:", text));
         categoriaField = createStyledTextField();
         fieldsPanel.add(categoriaField);
 
-        fieldsPanel.add(createStyledLabel("Tipo de Produto:"));
+        fieldsPanel.add(createStyledLabel("Tipo de Produto:", text));
         tipoProdutoComboBox = new JComboBox<>(TipoProduto.values());
+        tipoProdutoComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (isSelected) {
+                    setBackground(primary);
+                    setForeground(textOnDark);
+                } else {
+                    setBackground(Color.WHITE);
+                    setForeground(text);
+                }
+                return this;
+            }
+        });
         fieldsPanel.add(tipoProdutoComboBox);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonsPanel.setBackground(background);
-        JButton novoButton = createStyledButton("Novo");
-        JButton salvarButton = createStyledButton("Salvar");
-        JButton excluirButton = createStyledButton("Excluir");
+        buttonsPanel.setOpaque(false);
+        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
+        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
+        JButton excluirButton = createStyledButton("Excluir", accent, text);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -89,31 +99,30 @@ public class ProdutoScreen extends JFrame {
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Torna a tabela não editável
+                return false;
             }
         };
         tabelaProdutos = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaProdutos.setBackground(panelBackground);
-        tabelaProdutos.setForeground(textColor);
-        tabelaProdutos.setGridColor(new Color(80, 80, 80));
-        tabelaProdutos.setSelectionBackground(buttonBackground);
-        tabelaProdutos.setSelectionForeground(buttonForeground);
+        tabelaProdutos.setBackground(Color.WHITE);
+        tabelaProdutos.setForeground(text);
+        tabelaProdutos.setGridColor(Color.LIGHT_GRAY);
+        tabelaProdutos.setSelectionBackground(accent);
+        tabelaProdutos.setSelectionForeground(text);
         tabelaProdutos.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaProdutos.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaProdutos.getTableHeader();
-        tableHeader.setBackground(new Color(80, 80, 80));
-        tableHeader.setForeground(buttonBackground);
+        tableHeader.setBackground(primary);
+        tableHeader.setForeground(textOnDark);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaProdutos);
-        tableScrollPane.getViewport().setBackground(background);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(panelBackground, 2));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(background);
+        mainPanel.setOpaque(false);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         mainPanel.add(fieldsPanel, BorderLayout.NORTH);
         mainPanel.add(tableScrollPane, BorderLayout.CENTER);
@@ -141,10 +150,10 @@ public class ProdutoScreen extends JFrame {
                         try {
                             tipoProdutoComboBox.setSelectedItem(TipoProduto.valueOf(tipoProdutoObj.toString()));
                         } catch (IllegalArgumentException ex) {
-                            tipoProdutoComboBox.setSelectedIndex(0); // Reset to default if value is invalid
+                            tipoProdutoComboBox.setSelectedIndex(0);
                         }
                     } else {
-                        tipoProdutoComboBox.setSelectedIndex(0); // Reset to default for empty/null
+                        tipoProdutoComboBox.setSelectedIndex(0);
                     }
                 }
             }
@@ -154,7 +163,7 @@ public class ProdutoScreen extends JFrame {
     }
 
     private void carregarProdutos() {
-        tableModel.setRowCount(0); // Limpa a tabela
+        tableModel.setRowCount(0);
         for (Produto produto : produtos) {
             tableModel.addRow(new Object[]{
                     produto.getId(),
@@ -218,35 +227,31 @@ public class ProdutoScreen extends JFrame {
         tabelaProdutos.clearSelection();
     }
 
-    private JLabel createStyledLabel(String text) {
+    private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
+        label.setForeground(color);
         label.setFont(new Font("Arial", Font.BOLD, 14));
         return label;
     }
 
     private JTextField createStyledTextField() {
-        JTextField textField = new JTextField();
-        textField.setBackground(new Color(60, 63, 65));
-        textField.setForeground(Color.WHITE);
-        textField.setCaretColor(Color.WHITE);
+        JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(Color.GRAY, 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
     }
 
-    private JButton createStyledButton(String text) {
+    private JButton createStyledButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0));
-        button.setForeground(Color.BLACK);
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2));
-        button.setPreferredSize(new Dimension(120, 40));
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
     }
 

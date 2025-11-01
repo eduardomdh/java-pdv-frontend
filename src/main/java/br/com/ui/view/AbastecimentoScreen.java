@@ -78,7 +78,6 @@ public class AbastecimentoScreen extends JFrame {
 
     private JPanel createPumpSection(String pumpTitle, String fuel, String details, String totalValue, String[] paymentOptions, String status, Color panelBg, Color textC, Color statusColor) {
         JPanel sectionPanel = new JPanel();
-        // Usar BoxLayout com alinhamento CENTER_ALIGNMENT para centralizar os componentes
         sectionPanel.setLayout(new BoxLayout(sectionPanel, BoxLayout.Y_AXIS));
         sectionPanel.setBackground(panelBg);
         sectionPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -89,16 +88,16 @@ public class AbastecimentoScreen extends JFrame {
         JLabel titleLabel = new JLabel(pumpTitle, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(textC);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // Centraliza o título da bomba
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         sectionPanel.add(titleLabel);
         sectionPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         if (!fuel.isEmpty()) {
-            sectionPanel.add(createStyledLabel("Combustível: " + fuel, textC));
+            sectionPanel.add(createStyledLabel("Combustível: " + fuel, textC, SwingConstants.CENTER));
             sectionPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-            sectionPanel.add(createStyledLabel("<html>Detalhes: " + details + "</html>", textC));
+            sectionPanel.add(createStyledLabel("<html><center>Detalhes: " + details + "</center></html>", textC, SwingConstants.CENTER));
             sectionPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-            sectionPanel.add(createStyledLabel("Valor Total: " + totalValue, textC));
+            sectionPanel.add(createStyledLabel("Valor Total: " + totalValue, textC, SwingConstants.CENTER));
             sectionPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
             // --- Radio Buttons para Opções de Pagamento ---
@@ -108,7 +107,7 @@ public class AbastecimentoScreen extends JFrame {
             TitledBorder paymentBorder = BorderFactory.createTitledBorder("Opções de Pagamento");
             paymentBorder.setTitleColor(textC);
             paymentPanel.setBorder(paymentBorder);
-            paymentPanel.setAlignmentX(Component.CENTER_ALIGNMENT); // Centraliza o painel de pagamento
+            paymentPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             ButtonGroup paymentGroup = new ButtonGroup();
             for (String option : paymentOptions) {
@@ -117,30 +116,30 @@ public class AbastecimentoScreen extends JFrame {
                 radioButton.setBackground(panelBg);
                 radioButton.setForeground(textC);
                 radioButton.setFocusPainted(false);
-                radioButton.setAlignmentX(Component.CENTER_ALIGNMENT); // Centraliza cada Radio Button
+                radioButton.setAlignmentX(Component.LEFT_ALIGNMENT);
                 paymentGroup.add(radioButton);
                 paymentPanel.add(radioButton);
             }
             sectionPanel.add(paymentPanel);
         }
 
-        sectionPanel.add(Box.createVerticalGlue()); // Empurra o status para baixo
+        sectionPanel.add(Box.createVerticalGlue());
 
         JLabel statusLabel = new JLabel("Status: " + status, SwingConstants.CENTER);
         statusLabel.setFont(new Font("Arial", Font.BOLD, 20));
         statusLabel.setForeground(statusColor);
-        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // Centraliza o status
+        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         sectionPanel.add(statusLabel);
 
         return sectionPanel;
     }
 
-    private JLabel createStyledLabel(String text, Color textColor) {
-        JLabel label = new JLabel(text);
+    private JLabel createStyledLabel(String text, Color textColor, int horizontalAlignment) {
+        JLabel label = new JLabel(text, horizontalAlignment);
         label.setForeground(textColor);
         label.setFont(new Font("Arial", Font.PLAIN, 14));
-        label.setAlignmentX(Component.CENTER_ALIGNMENT); // Centraliza o texto dos detalhes
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
         return label;
     }
 
