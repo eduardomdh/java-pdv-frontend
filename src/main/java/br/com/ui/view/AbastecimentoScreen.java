@@ -1,5 +1,7 @@
 package br.com.ui.view;
 
+import br.com.ui.util.ColorPalette;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
@@ -15,24 +17,18 @@ public class AbastecimentoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // --- Cores ---
-        Color background = new Color(43, 43, 43);
-        Color panelBackground = new Color(60, 63, 65);
-        Color textColor = Color.WHITE;
-        Color buttonBackground = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
         contentPane.setLayout(new BorderLayout(10, 10));
 
         // --- Painel Superior (Usuário e Logout) ---
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(background);
+        topPanel.setBackground(ColorPalette.BACKGROUND);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         JLabel userLabel = new JLabel("Bem-vindo, " + loggedInUsername + "!", SwingConstants.LEFT);
         userLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        userLabel.setForeground(textColor);
+        userLabel.setForeground(ColorPalette.TEXT);
         topPanel.add(userLabel, BorderLayout.WEST);
 
         JButton logoutButton = createStyledButton("Sair");
@@ -48,7 +44,7 @@ public class AbastecimentoScreen extends JFrame {
         // --- Título Principal ---
         JLabel mainTitleLabel = new JLabel("Central de Abastecimento", SwingConstants.CENTER);
         mainTitleLabel.setFont(new Font("Arial", Font.BOLD, 32));
-        mainTitleLabel.setForeground(buttonBackground); // Amarelo
+        mainTitleLabel.setForeground(ColorPalette.PRIMARY);
         mainTitleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
 
         // --- Container do Cabeçalho (Título e Painel Superior) ---
@@ -65,13 +61,13 @@ public class AbastecimentoScreen extends JFrame {
         pumpsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Adiciona margem
 
         // Seção B1 (Concluída)
-        pumpsPanel.add(createPumpSection("B1", "Etanol", "40 litros / R$ 4,50 por litro", "R$ 180,00", new String[]{"PIX", "Dinheiro (D)", "Cartão de Crédito (CC)", "Cartão de Débito (CD)"}, "Concluída", panelBackground, textColor, Color.GREEN));
+        pumpsPanel.add(createPumpSection("B1", "Etanol", "40 litros / R$ 4,50 por litro", "R$ 180,00", new String[]{"PIX", "Dinheiro (D)", "Cartão de Crédito (CC)", "Cartão de Débito (CD)"}, "Concluída", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT, Color.GREEN));
 
         // Seção B2 (Ativa)
-        pumpsPanel.add(createPumpSection("B2", "Gasolina", "30 litros / R$ 6,50 por litro", "R$ 195,00", new String[]{"PIX", "Dinheiro (D)", "Cartão de Crédito (CC)", "Cartão de Débito (CD)"}, "Ativa", panelBackground, textColor, Color.ORANGE));
+        pumpsPanel.add(createPumpSection("B2", "Gasolina", "30 litros / R$ 6,50 por litro", "R$ 195,00", new String[]{"PIX", "Dinheiro (D)", "Cartão de Crédito (CC)", "Cartão de Débito (CD)"}, "Ativa", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT, Color.ORANGE));
 
         // Seção B3 (Inativa)
-        pumpsPanel.add(createPumpSection("B3", "", "", "", new String[]{}, "INATIVA", panelBackground, textColor, Color.RED));
+        pumpsPanel.add(createPumpSection("B3", "", "", "", new String[]{}, "INATIVA", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT, Color.RED));
 
         contentPane.add(pumpsPanel, BorderLayout.CENTER);
     }
@@ -81,7 +77,7 @@ public class AbastecimentoScreen extends JFrame {
         sectionPanel.setLayout(new BoxLayout(sectionPanel, BoxLayout.Y_AXIS));
         sectionPanel.setBackground(panelBg);
         sectionPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80), 2),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
@@ -148,9 +144,9 @@ public class AbastecimentoScreen extends JFrame {
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0));
-        button.setForeground(Color.BLACK);
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2));
+        button.setBackground(ColorPalette.PRIMARY);
+        button.setForeground(ColorPalette.WHITE_TEXT);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         button.setPreferredSize(new Dimension(120, 40));
         return button;
     }

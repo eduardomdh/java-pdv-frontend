@@ -1,6 +1,7 @@
 package br.com.ui.view;
 
 import br.com.model.Contato;
+import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -24,43 +25,35 @@ public class ContatoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color text = new Color(51, 51, 51);
-        Color textOnDark = Color.WHITE;
-        Color accent = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados do Contato", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createTitledBorder(null, "Dados do Contato", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Telefone:", text));
+        fieldsPanel.add(createStyledLabel("Telefone:", ColorPalette.TEXT));
         telefoneField = createStyledTextField();
         fieldsPanel.add(telefoneField);
 
-        fieldsPanel.add(createStyledLabel("Email:", text));
+        fieldsPanel.add(createStyledLabel("Email:", ColorPalette.TEXT));
         emailField = createStyledTextField();
         fieldsPanel.add(emailField);
 
-        fieldsPanel.add(createStyledLabel("Endereço:", text));
+        fieldsPanel.add(createStyledLabel("Endereço:", ColorPalette.TEXT));
         enderecoField = createStyledTextField();
         fieldsPanel.add(enderecoField);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
-        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
-        JButton excluirButton = createStyledButton("Excluir", accent, text);
+        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -74,21 +67,21 @@ public class ContatoScreen extends JFrame {
         tabelaContatos = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaContatos.setBackground(Color.WHITE);
-        tabelaContatos.setForeground(text);
-        tabelaContatos.setGridColor(Color.LIGHT_GRAY);
-        tabelaContatos.setSelectionBackground(accent);
-        tabelaContatos.setSelectionForeground(text);
+        tabelaContatos.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaContatos.setForeground(ColorPalette.TEXT);
+        tabelaContatos.setGridColor(new Color(200, 200, 200));
+        tabelaContatos.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaContatos.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaContatos.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaContatos.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaContatos.getTableHeader();
-        tableHeader.setBackground(primary);
-        tableHeader.setForeground(textOnDark);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaContatos);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -118,8 +111,11 @@ public class ContatoScreen extends JFrame {
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY, 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;

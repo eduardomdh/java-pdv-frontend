@@ -1,6 +1,7 @@
 package br.com.ui.view;
 
 import br.com.ui.model.Produto;
+import br.com.ui.util.ColorPalette;
 import br.com.ui.util.TipoProduto;
 
 import javax.swing.*;
@@ -27,57 +28,49 @@ public class ProdutoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color text = new Color(51, 51, 51);
-        Color textOnDark = Color.WHITE;
-        Color accent = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
-        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados do Produto", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createTitledBorder(null, "Dados do Produto", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Nome:", text));
+        fieldsPanel.add(createStyledLabel("Nome:", ColorPalette.TEXT));
         nomeField = createStyledTextField();
         fieldsPanel.add(nomeField);
 
-        fieldsPanel.add(createStyledLabel("Referência:", text));
+        fieldsPanel.add(createStyledLabel("Referência:", ColorPalette.TEXT));
         referenciaField = createStyledTextField();
         fieldsPanel.add(referenciaField);
 
-        fieldsPanel.add(createStyledLabel("Fornecedor:", text));
+        fieldsPanel.add(createStyledLabel("Fornecedor:", ColorPalette.TEXT));
         fornecedorField = createStyledTextField();
         fieldsPanel.add(fornecedorField);
 
-        fieldsPanel.add(createStyledLabel("Marca:", text));
+        fieldsPanel.add(createStyledLabel("Marca:", ColorPalette.TEXT));
         marcaField = createStyledTextField();
         fieldsPanel.add(marcaField);
 
-        fieldsPanel.add(createStyledLabel("Categoria:", text));
+        fieldsPanel.add(createStyledLabel("Categoria:", ColorPalette.TEXT));
         categoriaField = createStyledTextField();
         fieldsPanel.add(categoriaField);
 
-        fieldsPanel.add(createStyledLabel("Tipo de Produto:", text));
+        fieldsPanel.add(createStyledLabel("Tipo de Produto:", ColorPalette.TEXT));
         tipoProdutoComboBox = new JComboBox<>(TipoProduto.values());
         tipoProdutoComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (isSelected) {
-                    setBackground(primary);
-                    setForeground(textOnDark);
+                    setBackground(ColorPalette.PRIMARY);
+                    setForeground(ColorPalette.WHITE_TEXT);
                 } else {
-                    setBackground(Color.WHITE);
-                    setForeground(text);
+                    setBackground(ColorPalette.PANEL_BACKGROUND);
+                    setForeground(ColorPalette.TEXT);
                 }
                 return this;
             }
@@ -87,9 +80,9 @@ public class ProdutoScreen extends JFrame {
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
-        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
-        JButton excluirButton = createStyledButton("Excluir", accent, text);
+        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -105,21 +98,21 @@ public class ProdutoScreen extends JFrame {
         tabelaProdutos = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaProdutos.setBackground(Color.WHITE);
-        tabelaProdutos.setForeground(text);
-        tabelaProdutos.setGridColor(Color.LIGHT_GRAY);
-        tabelaProdutos.setSelectionBackground(accent);
-        tabelaProdutos.setSelectionForeground(text);
+        tabelaProdutos.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaProdutos.setForeground(ColorPalette.TEXT);
+        tabelaProdutos.setGridColor(new Color(200, 200, 200));
+        tabelaProdutos.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaProdutos.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaProdutos.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaProdutos.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaProdutos.getTableHeader();
-        tableHeader.setBackground(primary);
-        tableHeader.setForeground(textOnDark);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaProdutos);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -237,8 +230,11 @@ public class ProdutoScreen extends JFrame {
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY, 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
@@ -256,12 +252,6 @@ public class ProdutoScreen extends JFrame {
     }
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         SwingUtilities.invokeLater(() -> {
             new ProdutoScreen().setVisible(true);
         });

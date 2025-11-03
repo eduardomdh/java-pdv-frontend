@@ -1,5 +1,7 @@
 package br.com.ui.view;
 
+import br.com.ui.util.ColorPalette;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -18,51 +20,43 @@ public class EstoqueScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color text = new Color(51, 51, 51);
-        Color textOnDark = Color.WHITE;
-        Color accent = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados do Estoque", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createTitledBorder(null, "Dados do Estoque", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Quantidade:", text));
+        fieldsPanel.add(createStyledLabel("Quantidade:", ColorPalette.TEXT));
         quantidadeField = createStyledTextField();
         fieldsPanel.add(quantidadeField);
 
-        fieldsPanel.add(createStyledLabel("Local do Tanque:", text));
+        fieldsPanel.add(createStyledLabel("Local do Tanque:", ColorPalette.TEXT));
         localTanqueField = createStyledTextField();
         fieldsPanel.add(localTanqueField);
 
-        fieldsPanel.add(createStyledLabel("Endereço do Local:", text));
+        fieldsPanel.add(createStyledLabel("Endereço do Local:", ColorPalette.TEXT));
         localEnderecoField = createStyledTextField();
         fieldsPanel.add(localEnderecoField);
 
-        fieldsPanel.add(createStyledLabel("Lote de Fabricação:", text));
+        fieldsPanel.add(createStyledLabel("Lote de Fabricação:", ColorPalette.TEXT));
         loteFabricacaoField = createStyledTextField();
         fieldsPanel.add(loteFabricacaoField);
 
-        fieldsPanel.add(createStyledLabel("Data de Validade (yyyy-mm-dd):", text));
+        fieldsPanel.add(createStyledLabel("Data de Validade (yyyy-mm-dd):", ColorPalette.TEXT));
         dataValidadeField = createStyledTextField();
         fieldsPanel.add(dataValidadeField);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
-        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
-        JButton excluirButton = createStyledButton("Excluir", accent, text);
+        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -73,21 +67,21 @@ public class EstoqueScreen extends JFrame {
         tabelaEstoque = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaEstoque.setBackground(Color.WHITE);
-        tabelaEstoque.setForeground(text);
-        tabelaEstoque.setGridColor(Color.LIGHT_GRAY);
-        tabelaEstoque.setSelectionBackground(accent);
-        tabelaEstoque.setSelectionForeground(text);
+        tabelaEstoque.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaEstoque.setForeground(ColorPalette.TEXT);
+        tabelaEstoque.setGridColor(new Color(200, 200, 200));
+        tabelaEstoque.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaEstoque.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaEstoque.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaEstoque.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaEstoque.getTableHeader();
-        tableHeader.setBackground(primary);
-        tableHeader.setForeground(textOnDark);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaEstoque);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -145,8 +139,11 @@ public class EstoqueScreen extends JFrame {
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY, 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
@@ -173,12 +170,6 @@ public class EstoqueScreen extends JFrame {
     }
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         SwingUtilities.invokeLater(() -> {
             new EstoqueScreen().setVisible(true);
         });

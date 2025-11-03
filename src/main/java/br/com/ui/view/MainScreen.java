@@ -1,5 +1,7 @@
 package br.com.ui.view;
 
+import br.com.ui.util.ColorPalette;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -14,40 +16,28 @@ public class MainScreen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color textOnDark = Color.WHITE;
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel do Cabeçalho ---
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(primary);
+        headerPanel.setBackground(ColorPalette.PRIMARY);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
         JLabel userLabel = new JLabel("Usuário: " + loggedInUsername, SwingConstants.LEFT);
         userLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        userLabel.setForeground(textOnDark);
+        userLabel.setForeground(ColorPalette.WHITE_TEXT);
         headerPanel.add(userLabel, BorderLayout.WEST);
 
         JLabel titleLabel = new JLabel("Painel de Gerenciamento", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setForeground(textOnDark);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT);
         headerPanel.add(titleLabel, BorderLayout.CENTER);
 
         JButton logoutButton = new JButton("Sair");
         logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
-        logoutButton.setForeground(primary); // Texto do botão de sair em Vermelho Escuro
-        logoutButton.setBackground(background); // Fundo claro para contraste
+        logoutButton.setForeground(ColorPalette.PRIMARY);
+        logoutButton.setBackground(ColorPalette.BACKGROUND);
         logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         logoutButton.addActionListener(e -> {
             this.dispose();
@@ -65,13 +55,13 @@ public class MainScreen extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Botões
-        JButton productButton = createMenuButton("Gerenciamento de Produtos", secondary, textOnDark);
-        JButton customerButton = createMenuButton("Gerenciamento de Clientes", secondary, textOnDark);
-        JButton stockButton = createMenuButton("Gerenciamento de Estoque", secondary, textOnDark);
-        JButton contactButton = createMenuButton("Gerenciamento de Contatos", secondary, textOnDark);
-        JButton costButton = createMenuButton("Gerenciamento de Custos", secondary, textOnDark);
-        JButton priceButton = createMenuButton("Gerenciamento de Preços", secondary, textOnDark);
-        JButton accessButton = createMenuButton("Gerenciamento de Acesso", primary, textOnDark);
+        JButton productButton = createMenuButton("Gerenciamento de Produtos", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        JButton customerButton = createMenuButton("Gerenciamento de Clientes", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        JButton stockButton = createMenuButton("Gerenciamento de Estoque", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        JButton contactButton = createMenuButton("Gerenciamento de Contatos", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        JButton costButton = createMenuButton("Gerenciamento de Custos", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        JButton priceButton = createMenuButton("Gerenciamento de Preços", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        JButton accessButton = createMenuButton("Gerenciamento de Acesso", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
 
         // Adicionando botões ao painel com GridBagConstraints
         gbc.gridx = 0;

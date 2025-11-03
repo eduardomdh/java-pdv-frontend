@@ -1,5 +1,7 @@
 package br.com.ui.view;
 
+import br.com.ui.util.ColorPalette;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -19,53 +21,45 @@ public class PessoaScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color text = new Color(51, 51, 51);
-        Color textOnDark = Color.WHITE;
-        Color accent = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados da Pessoa", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createTitledBorder(null, "Dados da Pessoa", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Nome Completo:", text));
+        fieldsPanel.add(createStyledLabel("Nome Completo:", ColorPalette.TEXT));
         nomeCompletoField = createStyledTextField();
         fieldsPanel.add(nomeCompletoField);
 
-        fieldsPanel.add(createStyledLabel("CPF/CNPJ:", text));
+        fieldsPanel.add(createStyledLabel("CPF/CNPJ:", ColorPalette.TEXT));
         cpfCnpjField = createStyledTextField();
         fieldsPanel.add(cpfCnpjField);
 
-        fieldsPanel.add(createStyledLabel("Nº CTPS:", text));
+        fieldsPanel.add(createStyledLabel("Nº CTPS:", ColorPalette.TEXT));
         numeroCtpsField = createStyledTextField();
         fieldsPanel.add(numeroCtpsField);
 
-        fieldsPanel.add(createStyledLabel("Data Nascimento (yyyy-mm-dd):", text));
+        fieldsPanel.add(createStyledLabel("Data Nascimento (yyyy-mm-dd):", ColorPalette.TEXT));
         dataNascimentoField = createStyledTextField();
         fieldsPanel.add(dataNascimentoField);
 
-        fieldsPanel.add(createStyledLabel("Tipo de Pessoa:", text));
+        fieldsPanel.add(createStyledLabel("Tipo de Pessoa:", ColorPalette.TEXT));
         tipoPessoaComboBox = new JComboBox<>(new String[]{"FISICA", "JURIDICA"});
         tipoPessoaComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (isSelected) {
-                    setBackground(primary);
-                    setForeground(textOnDark);
+                    setBackground(ColorPalette.PRIMARY);
+                    setForeground(ColorPalette.WHITE_TEXT);
                 } else {
-                    setBackground(Color.WHITE);
-                    setForeground(text);
+                    setBackground(ColorPalette.PANEL_BACKGROUND);
+                    setForeground(ColorPalette.TEXT);
                 }
                 return this;
             }
@@ -75,9 +69,9 @@ public class PessoaScreen extends JFrame {
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
-        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
-        JButton excluirButton = createStyledButton("Excluir", accent, text);
+        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -88,21 +82,21 @@ public class PessoaScreen extends JFrame {
         tabelaPessoas = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaPessoas.setBackground(Color.WHITE);
-        tabelaPessoas.setForeground(text);
-        tabelaPessoas.setGridColor(Color.LIGHT_GRAY);
-        tabelaPessoas.setSelectionBackground(accent);
-        tabelaPessoas.setSelectionForeground(text);
+        tabelaPessoas.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaPessoas.setForeground(ColorPalette.TEXT);
+        tabelaPessoas.setGridColor(new Color(200, 200, 200));
+        tabelaPessoas.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaPessoas.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaPessoas.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaPessoas.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaPessoas.getTableHeader();
-        tableHeader.setBackground(primary);
-        tableHeader.setForeground(textOnDark);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaPessoas);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -158,8 +152,11 @@ public class PessoaScreen extends JFrame {
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY, 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
@@ -186,12 +183,6 @@ public class PessoaScreen extends JFrame {
     }
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         SwingUtilities.invokeLater(() -> {
             new PessoaScreen().setVisible(true);
         });

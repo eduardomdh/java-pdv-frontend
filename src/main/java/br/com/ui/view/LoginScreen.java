@@ -2,6 +2,7 @@ package br.com.ui.view;
 
 import br.com.model.User;
 import br.com.model.UserRepository;
+import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,20 +21,14 @@ public class LoginScreen extends JFrame {
         setSize(400, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
-        // --- Cores ---
-        Color background = new Color(43, 43, 43);
-        Color panelBackground = new Color(60, 63, 65);
-        Color textColor = Color.WHITE;
-        Color buttonBackground = new Color(255, 204, 0);
-        Color buttonForeground = Color.BLACK;
+        setResizable(false);
 
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
-        contentPane.setLayout(new BorderLayout(10, 10));
+        contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setLayout(new GridBagLayout());
 
         JPanel formPanel = new JPanel(new GridLayout(3, 1, 10, 10));
-        formPanel.setBackground(panelBackground);
+        formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Username
@@ -59,7 +54,7 @@ public class LoginScreen extends JFrame {
         buttonWrapper.add(loginButton);
         formPanel.add(buttonWrapper);
 
-        contentPane.add(formPanel, BorderLayout.CENTER);
+        contentPane.add(formPanel, new GridBagConstraints());
 
         // Adicionar listener ao botão de login
         loginButton.addActionListener(e -> authenticateUser());
@@ -67,19 +62,19 @@ public class LoginScreen extends JFrame {
 
     private JLabel createStyledLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
+        label.setForeground(ColorPalette.TEXT);
         label.setFont(new Font("Arial", Font.BOLD, 14));
         return label;
     }
 
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField();
-        textField.setBackground(new Color(60, 63, 65));
-        textField.setForeground(Color.WHITE);
-        textField.setCaretColor(Color.WHITE);
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
@@ -87,12 +82,12 @@ public class LoginScreen extends JFrame {
 
     private JPasswordField createStyledPasswordField() {
         JPasswordField passwordField = new JPasswordField();
-        passwordField.setBackground(new Color(60, 63, 65));
-        passwordField.setForeground(Color.WHITE);
-        passwordField.setCaretColor(Color.WHITE);
+        passwordField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        passwordField.setForeground(ColorPalette.TEXT);
+        passwordField.setCaretColor(ColorPalette.TEXT);
         passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
         passwordField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return passwordField;
@@ -103,9 +98,9 @@ public class LoginScreen extends JFrame {
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0));
-        button.setForeground(Color.BLACK);
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2));
+        button.setBackground(ColorPalette.PRIMARY);
+        button.setForeground(ColorPalette.WHITE_TEXT);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         button.setPreferredSize(new Dimension(120, 40));
         return button;
     }

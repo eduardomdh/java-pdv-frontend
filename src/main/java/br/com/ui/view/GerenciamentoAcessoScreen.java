@@ -2,6 +2,7 @@ package br.com.ui.view;
 
 import br.com.model.User;
 import br.com.model.UserRepository;
+import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -28,23 +29,15 @@ public class GerenciamentoAcessoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // --- Cores ---
-        Color background = new Color(43, 43, 43);
-        Color panelBackground = new Color(60, 63, 65);
-        Color textColor = Color.WHITE;
-        Color buttonBackground = new Color(255, 204, 0);
-        Color buttonForeground = Color.BLACK;
-
-        // --- Layout Principal ---
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
         contentPane.setLayout(new BorderLayout(10, 10));
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        fieldsPanel.setBackground(background);
+        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         TitledBorder titledBorder = BorderFactory.createTitledBorder("Dados do Usuário");
-        titledBorder.setTitleColor(textColor);
+        titledBorder.setTitleColor(ColorPalette.TEXT);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(10, 10, 10, 10),
                 titledBorder
@@ -61,13 +54,27 @@ public class GerenciamentoAcessoScreen extends JFrame {
         fieldsPanel.add(createStyledLabel("Tipo de Acesso:"));
         tipoAcessoComboBox = new JComboBox<>(new String[]{"funcionario", "gerente", "administrador"});
         fieldsPanel.add(tipoAcessoComboBox);
+        tipoAcessoComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (isSelected) {
+                    setBackground(ColorPalette.PRIMARY);
+                    setForeground(ColorPalette.WHITE_TEXT);
+                } else {
+                    setBackground(ColorPalette.PANEL_BACKGROUND);
+                    setForeground(ColorPalette.TEXT);
+                }
+                return this;
+            }
+        });
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        buttonsPanel.setBackground(background);
-        JButton novoButton = createStyledButton("Novo");
-        JButton salvarButton = createStyledButton("Salvar");
-        JButton excluirButton = createStyledButton("Excluir");
+        buttonsPanel.setOpaque(false);
+        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -83,25 +90,25 @@ public class GerenciamentoAcessoScreen extends JFrame {
         tabelaUsuarios = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaUsuarios.setBackground(panelBackground);
-        tabelaUsuarios.setForeground(textColor);
-        tabelaUsuarios.setGridColor(new Color(80, 80, 80));
-        tabelaUsuarios.setSelectionBackground(buttonBackground);
-        tabelaUsuarios.setSelectionForeground(buttonForeground);
+        tabelaUsuarios.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaUsuarios.setForeground(ColorPalette.TEXT);
+        tabelaUsuarios.setGridColor(new Color(200, 200, 200));
+        tabelaUsuarios.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaUsuarios.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaUsuarios.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaUsuarios.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaUsuarios.getTableHeader();
-        tableHeader.setBackground(new Color(80, 80, 80));
-        tableHeader.setForeground(buttonBackground);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaUsuarios);
-        tableScrollPane.getViewport().setBackground(background);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(panelBackground, 2));
+        tableScrollPane.getViewport().setBackground(ColorPalette.BACKGROUND);
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 2));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBackground(background);
+        mainPanel.setOpaque(false);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         mainPanel.add(fieldsPanel, BorderLayout.NORTH);
         mainPanel.add(tableScrollPane, BorderLayout.CENTER);
@@ -185,19 +192,19 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
     private JLabel createStyledLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(Color.WHITE);
+        label.setForeground(ColorPalette.TEXT);
         label.setFont(new Font("Arial", Font.BOLD, 14));
         return label;
     }
 
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField();
-        textField.setBackground(new Color(60, 63, 65));
-        textField.setForeground(Color.WHITE);
-        textField.setCaretColor(Color.WHITE);
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
@@ -205,26 +212,25 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
     private JPasswordField createStyledPasswordField() {
         JPasswordField passwordField = new JPasswordField();
-        passwordField.setBackground(new Color(60, 63, 65));
-        passwordField.setForeground(Color.WHITE);
-        passwordField.setCaretColor(Color.WHITE);
+        passwordField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        passwordField.setForeground(ColorPalette.TEXT);
+        passwordField.setCaretColor(ColorPalette.TEXT);
         passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
         passwordField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return passwordField;
     }
 
-    private JButton createStyledButton(String text) {
+    private JButton createStyledButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(new Color(255, 204, 0));
-        button.setForeground(Color.BLACK);
-        button.setBorder(BorderFactory.createLineBorder(new Color(255, 102, 0), 2));
-        button.setPreferredSize(new Dimension(120, 40));
+        button.setBackground(background);
+        button.setForeground(foreground);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
     }
 }

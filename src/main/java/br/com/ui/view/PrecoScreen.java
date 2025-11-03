@@ -2,6 +2,7 @@ package br.com.ui.view;
 
 import br.com.model.Preco;
 import br.com.model.Produto;
+import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -37,22 +38,14 @@ public class PrecoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color text = new Color(51, 51, 51);
-        Color textOnDark = Color.WHITE;
-        Color accent = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Seleção de Produto e Campos ---
         JPanel topFieldsPanel = new JPanel(new BorderLayout(10, 10));
-        topFieldsPanel.setBackground(Color.WHITE);
+        topFieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         topFieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados de Preço", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createTitledBorder(null, "Dados de Preço", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
@@ -64,24 +57,24 @@ public class PrecoScreen extends JFrame {
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (isSelected) {
-                    setBackground(primary);
-                    setForeground(textOnDark);
+                    setBackground(ColorPalette.PRIMARY);
+                    setForeground(ColorPalette.WHITE_TEXT);
                 } else {
-                    setBackground(Color.WHITE);
-                    setForeground(text);
+                    setBackground(ColorPalette.PANEL_BACKGROUND);
+                    setForeground(ColorPalette.TEXT);
                 }
                 return this;
             }
         });
-        productSelectionPanel.add(createStyledLabel("Produto:", text));
+        productSelectionPanel.add(createStyledLabel("Produto:", ColorPalette.TEXT));
         productSelectionPanel.add(produtoComboBox);
 
         JPanel fieldsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         fieldsPanel.setOpaque(false);
-        fieldsPanel.add(createStyledLabel("Valor (ex: 5.89):", text));
+        fieldsPanel.add(createStyledLabel("Valor (ex: 5.89):", ColorPalette.TEXT));
         valorField = createStyledTextField();
         fieldsPanel.add(valorField);
-        fieldsPanel.add(createStyledLabel("Data Alteração (dd/mm/yyyy):", text));
+        fieldsPanel.add(createStyledLabel("Data Alteração (dd/mm/yyyy):", ColorPalette.TEXT));
         dataAlteracaoField = createStyledTextField();
         fieldsPanel.add(dataAlteracaoField);
 
@@ -91,8 +84,8 @@ public class PrecoScreen extends JFrame {
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton salvarButton = createStyledButton("Salvar Novo Preço", primary, textOnDark);
-        JButton excluirButton = createStyledButton("Excluir Preço", accent, text);
+        JButton salvarButton = createStyledButton("Salvar Novo Preço", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir Preço", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
 
@@ -105,21 +98,21 @@ public class PrecoScreen extends JFrame {
         tabelaPrecos = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaPrecos.setBackground(Color.WHITE);
-        tabelaPrecos.setForeground(text);
-        tabelaPrecos.setGridColor(Color.LIGHT_GRAY);
-        tabelaPrecos.setSelectionBackground(accent);
-        tabelaPrecos.setSelectionForeground(text);
+        tabelaPrecos.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaPrecos.setForeground(ColorPalette.TEXT);
+        tabelaPrecos.setGridColor(new Color(200, 200, 200));
+        tabelaPrecos.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaPrecos.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaPrecos.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaPrecos.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaPrecos.getTableHeader();
-        tableHeader.setBackground(primary);
-        tableHeader.setForeground(textOnDark);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaPrecos);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -149,8 +142,11 @@ public class PrecoScreen extends JFrame {
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY, 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
@@ -163,6 +159,7 @@ public class PrecoScreen extends JFrame {
         button.setFocusPainted(false);
         button.setBackground(background);
         button.setForeground(foreground);
+        button.setOpaque(true);
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
     }

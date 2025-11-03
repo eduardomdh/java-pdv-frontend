@@ -1,6 +1,7 @@
 package br.com.ui.view;
 
 import br.com.model.Custo;
+import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -31,43 +32,35 @@ public class CustoScreen extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Cores
-        Color background = new Color(240, 240, 240);
-        Color primary = new Color(163, 31, 52);
-        Color secondary = new Color(0, 153, 102);
-        Color text = new Color(51, 51, 51);
-        Color textOnDark = Color.WHITE;
-        Color accent = new Color(255, 204, 0);
-
         Container contentPane = getContentPane();
-        contentPane.setBackground(background);
+        contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        fieldsPanel.setBackground(Color.WHITE);
+        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados do Custo", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), primary),
+                BorderFactory.createTitledBorder(null, "Dados do Custo", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Descrição (ex: Conta de Água):", text));
+        fieldsPanel.add(createStyledLabel("Descrição (ex: Conta de Água):", ColorPalette.TEXT));
         descricaoField = createStyledTextField();
         fieldsPanel.add(descricaoField);
 
-        fieldsPanel.add(createStyledLabel("Valor (ex: 480.50):", text));
+        fieldsPanel.add(createStyledLabel("Valor (ex: 480.50):", ColorPalette.TEXT));
         valorField = createStyledTextField();
         fieldsPanel.add(valorField);
 
-        fieldsPanel.add(createStyledLabel("Data de Vencimento (dd/mm/yyyy):", text));
+        fieldsPanel.add(createStyledLabel("Data de Vencimento (dd/mm/yyyy):", ColorPalette.TEXT));
         dataVencimentoField = createStyledTextField();
         fieldsPanel.add(dataVencimentoField);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", secondary, textOnDark);
-        JButton salvarButton = createStyledButton("Salvar", primary, textOnDark);
-        JButton excluirButton = createStyledButton("Excluir", accent, text);
+        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
         buttonsPanel.add(excluirButton);
@@ -81,21 +74,21 @@ public class CustoScreen extends JFrame {
         tabelaCustos = new JTable(tableModel);
 
         // Estilo da Tabela
-        tabelaCustos.setBackground(Color.WHITE);
-        tabelaCustos.setForeground(text);
-        tabelaCustos.setGridColor(Color.LIGHT_GRAY);
-        tabelaCustos.setSelectionBackground(accent);
-        tabelaCustos.setSelectionForeground(text);
+        tabelaCustos.setBackground(ColorPalette.PANEL_BACKGROUND);
+        tabelaCustos.setForeground(ColorPalette.TEXT);
+        tabelaCustos.setGridColor(new Color(200, 200, 200));
+        tabelaCustos.setSelectionBackground(ColorPalette.PRIMARY);
+        tabelaCustos.setSelectionForeground(ColorPalette.WHITE_TEXT);
         tabelaCustos.setFont(new Font("Arial", Font.PLAIN, 14));
         tabelaCustos.setRowHeight(25);
 
         JTableHeader tableHeader = tabelaCustos.getTableHeader();
-        tableHeader.setBackground(primary);
-        tableHeader.setForeground(textOnDark);
+        tableHeader.setBackground(ColorPalette.PRIMARY);
+        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
         tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
 
         JScrollPane tableScrollPane = new JScrollPane(tabelaCustos);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -125,8 +118,11 @@ public class CustoScreen extends JFrame {
     private JTextField createStyledTextField() {
         JTextField textField = new JTextField(15);
         textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
+        textField.setForeground(ColorPalette.TEXT);
+        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.GRAY, 1),
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         return textField;
