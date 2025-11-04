@@ -43,6 +43,11 @@ public class ApiClient {
         return execute(request, responseType);
     }
 
+    public <T> T put(String endpoint, Object body, Class<T> responseType) throws IOException, ApiServiceException {
+        Request request = buildRequest(endpoint, "PUT", body);
+        return execute(request, responseType);
+    }
+
     public void delete(String endpoint) throws IOException, ApiServiceException {
         Request request = buildRequest(endpoint, "DELETE", null);
         execute(request);

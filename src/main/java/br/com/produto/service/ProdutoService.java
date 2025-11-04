@@ -29,6 +29,10 @@ public class ProdutoService {
         return apiClient.post("/produtos", productRequest, ProdutoResponse.class);
     }
 
+    public ProdutoResponse updateProduct(Long id, ProdutoRequest productRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/produtos/" + id, productRequest, ProdutoResponse.class);
+    }
+
     public void deleteProduct(Long id) throws IOException, ApiServiceException {
         apiClient.delete("/produtos/" + id);
     }

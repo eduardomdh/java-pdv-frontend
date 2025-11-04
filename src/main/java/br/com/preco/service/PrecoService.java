@@ -26,4 +26,8 @@ public class PrecoService {
     public PrecoResponse createPreco(PrecoRequest precoRequest) throws IOException, ApiServiceException {
         return apiClient.post("/precos", precoRequest, PrecoResponse.class);
     }
+
+    public PrecoResponse updatePreco(Long id, PrecoRequest precoRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/precos/" + id, precoRequest, PrecoResponse.class);
+    }
 }

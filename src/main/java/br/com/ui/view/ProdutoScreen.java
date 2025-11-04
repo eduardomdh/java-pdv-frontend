@@ -18,6 +18,7 @@ public class ProdutoScreen extends JFrame {
     private JComboBox<TipoProduto> tipoProdutoComboBox;
     private JTable tabelaProdutos;
     private DefaultTableModel tableModel;
+    private Long produtoIdEmEdicao; // Novo campo para armazenar o ID do produto em edição
 
     private final ProdutoService produtoService;
 
@@ -69,9 +70,11 @@ public class ProdutoScreen extends JFrame {
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
+        buttonsPanel.add(editarButton); // Adiciona o botão Editar
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
@@ -93,6 +96,7 @@ public class ProdutoScreen extends JFrame {
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarProduto());
         excluirButton.addActionListener(e -> excluirProduto());
+        editarButton.addActionListener(e -> editarProduto()); // Ação para o botão Editar
 
         carregarProdutos();
     }
@@ -129,14 +133,37 @@ public class ProdutoScreen extends JFrame {
         );
 
         try {
-            produtoService.createProduct(request);
-            JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            if (produtoIdEmEdicao == null) { // Se não há ID em edição, é um novo produto
+                produtoService.createProduct(request);
+                JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Se há um ID em edição, é uma atualização
+                produtoService.updateProduct(produtoIdEmEdicao, request);
+                JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            }
             carregarProdutos(); // Recarrega a lista da API
             limparCampos();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar produto: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void editarProduto() {
+        int selectedRow = tabelaProdutos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        produtoIdEmEdicao = (Long) tabelaProdutos.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        nomeField.setText((String) tabelaProdutos.getValueAt(selectedRow, 1));
+        referenciaField.setText((String) tabelaProdutos.getValueAt(selectedRow, 2));
+        fornecedorField.setText((String) tabelaProdutos.getValueAt(selectedRow, 3));
+        marcaField.setText((String) tabelaProdutos.getValueAt(selectedRow, 4));
+        categoriaField.setText((String) tabelaProdutos.getValueAt(selectedRow, 5));
+        tipoProdutoComboBox.setSelectedItem(TipoProduto.valueOf(tabelaProdutos.getValueAt(selectedRow, 6).toString())); // Converte String para TipoProduto
+
+        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirProduto() {
@@ -170,6 +197,7 @@ public class ProdutoScreen extends JFrame {
         categoriaField.setText("");
         tipoProdutoComboBox.setSelectedIndex(0);
         tabelaProdutos.clearSelection();
+        produtoIdEmEdicao = null; // Limpa o ID em edição
     }
 
     // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos

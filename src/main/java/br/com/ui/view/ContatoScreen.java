@@ -18,6 +18,7 @@ public class ContatoScreen extends JFrame {
     private JComboBox<TipoContato> tipoContatoComboBox;
     private JTable tabelaContatos;
     private DefaultTableModel tableModel;
+    private Long contatoIdEmEdicao; // Novo campo para armazenar o ID do contato em edição
 
     private final ContatoService contatoService;
 
@@ -61,9 +62,11 @@ public class ContatoScreen extends JFrame {
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
+        buttonsPanel.add(editarButton); // Adiciona o botão Editar
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
@@ -85,6 +88,7 @@ public class ContatoScreen extends JFrame {
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarContato());
         excluirButton.addActionListener(e -> excluirContato());
+        editarButton.addActionListener(e -> editarContato()); // Ação para o botão Editar
 
         carregarContatos();
     }
@@ -117,8 +121,13 @@ public class ContatoScreen extends JFrame {
                     (TipoContato) tipoContatoComboBox.getSelectedItem()
             );
 
-            contatoService.createContato(request);
-            JOptionPane.showMessageDialog(this, "Contato salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            if (contatoIdEmEdicao == null) { // Se não há ID em edição, é um novo contato
+                contatoService.createContato(request);
+                JOptionPane.showMessageDialog(this, "Contato salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Se há um ID em edição, é uma atualização
+                contatoService.updateContato(contatoIdEmEdicao, request);
+                JOptionPane.showMessageDialog(this, "Contato atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            }
             carregarContatos();
             limparCampos();
 
@@ -126,6 +135,22 @@ public class ContatoScreen extends JFrame {
             JOptionPane.showMessageDialog(this, "Erro ao salvar contato: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void editarContato() {
+        int selectedRow = tabelaContatos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um contato para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        contatoIdEmEdicao = (Long) tabelaContatos.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        telefoneField.setText(tabelaContatos.getValueAt(selectedRow, 1).toString());
+        emailField.setText(tabelaContatos.getValueAt(selectedRow, 2).toString());
+        enderecoField.setText(tabelaContatos.getValueAt(selectedRow, 3).toString());
+        tipoContatoComboBox.setSelectedItem(TipoContato.valueOf(tabelaContatos.getValueAt(selectedRow, 4).toString()));
+
+        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirContato() {
@@ -157,6 +182,7 @@ public class ContatoScreen extends JFrame {
         enderecoField.setText("");
         tipoContatoComboBox.setSelectedIndex(0);
         tabelaContatos.clearSelection();
+        contatoIdEmEdicao = null; // Limpa o ID em edição
     }
 
     // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos

@@ -29,6 +29,10 @@ public class EstoqueService {
         return apiClient.post("/estoques", estoqueRequest, EstoqueResponse.class);
     }
 
+    public EstoqueResponse updateEstoque(Long id, EstoqueRequest estoqueRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/estoques/" + id, estoqueRequest, EstoqueResponse.class);
+    }
+
     public void deleteEstoque(Long id) throws IOException, ApiServiceException {
         apiClient.delete("/estoques/" + id);
     }

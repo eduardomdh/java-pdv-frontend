@@ -29,6 +29,10 @@ public class PessoaService {
         return apiClient.post("/pessoas", pessoaRequest, PessoaResponse.class);
     }
 
+    public PessoaResponse updatePessoa(Long id, PessoaRequest pessoaRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/pessoas/" + id, pessoaRequest, PessoaResponse.class);
+    }
+
     public void deletePessoa(Long id) throws IOException, ApiServiceException {
         apiClient.delete("/pessoas/" + id);
     }

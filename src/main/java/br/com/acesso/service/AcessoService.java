@@ -29,6 +29,10 @@ public class AcessoService {
         return apiClient.post("/acessos", acessoRequest, AcessoResponse.class);
     }
 
+    public AcessoResponse updateAcesso(Long id, AcessoRequest acessoRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/acessos/" + id, acessoRequest, AcessoResponse.class);
+    }
+
     public void deleteAcesso(Long id) throws IOException, ApiServiceException {
         apiClient.delete("/acessos/" + id);
     }

@@ -20,6 +20,7 @@ public class CustoScreen extends JFrame {
     private JComboBox<TipoCusto> tipoCustoComboBox;
     private JTable tabelaCustos;
     private DefaultTableModel tableModel;
+    private Long custoIdEmEdicao; // Novo campo para armazenar o ID do custo em edição
 
     private final CustoService custoService;
 
@@ -71,9 +72,11 @@ public class CustoScreen extends JFrame {
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
+        buttonsPanel.add(editarButton); // Adiciona o botão Editar
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
@@ -95,6 +98,7 @@ public class CustoScreen extends JFrame {
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarCusto());
         excluirButton.addActionListener(e -> excluirCusto());
+        editarButton.addActionListener(e -> editarCusto()); // Ação para o botão Editar
 
         carregarCustos();
     }
@@ -137,8 +141,13 @@ public class CustoScreen extends JFrame {
                     (TipoCusto) tipoCustoComboBox.getSelectedItem()
             );
 
-            custoService.createCusto(request);
-            JOptionPane.showMessageDialog(this, "Custo salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            if (custoIdEmEdicao == null) { // Se não há ID em edição, é um novo custo
+                custoService.createCusto(request);
+                JOptionPane.showMessageDialog(this, "Custo salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Se há um ID em edição, é uma atualização
+                custoService.updateCusto(custoIdEmEdicao, request);
+                JOptionPane.showMessageDialog(this, "Custo atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            }
             carregarCustos();
             limparCampos();
 
@@ -150,6 +159,24 @@ public class CustoScreen extends JFrame {
             JOptionPane.showMessageDialog(this, "Erro ao salvar custo: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void editarCusto() {
+        int selectedRow = tabelaCustos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um custo para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        custoIdEmEdicao = (Long) tabelaCustos.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        impostoField.setText(tabelaCustos.getValueAt(selectedRow, 1).toString());
+        custoVariavelField.setText(tabelaCustos.getValueAt(selectedRow, 2).toString());
+        custoFixoField.setText(tabelaCustos.getValueAt(selectedRow, 3).toString());
+        margemLucroField.setText(tabelaCustos.getValueAt(selectedRow, 4).toString());
+        dataProcessamentoField.setText(tabelaCustos.getValueAt(selectedRow, 5).toString());
+        tipoCustoComboBox.setSelectedItem(TipoCusto.valueOf(tabelaCustos.getValueAt(selectedRow, 6).toString()));
+
+        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirCusto() {
@@ -183,6 +210,7 @@ public class CustoScreen extends JFrame {
         dataProcessamentoField.setText("");
         tipoCustoComboBox.setSelectedIndex(0);
         tabelaCustos.clearSelection();
+        custoIdEmEdicao = null; // Limpa o ID em edição
     }
 
     // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos

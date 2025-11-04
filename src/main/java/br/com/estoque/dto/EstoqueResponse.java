@@ -7,9 +7,9 @@ import java.time.LocalDate;
 public record EstoqueResponse(
     Long id,
     BigDecimal quantidade,
-    String localTannque,
+    String localTanque,
     String localEndereco,
-    String localFabricacao,
+    String loteFabricacao,
     LocalDate dataValidade,
     TipoEstoque tipoEstoque
 ) {}

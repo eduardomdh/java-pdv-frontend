@@ -7,6 +7,5 @@ import java.time.LocalDate;
 public record PrecoRequest(
     BigDecimal valor,
     LocalDate dataAlteracao,
-    LocalDate horaAlteracao,
-    TipoPreco tipoPreco
+    LocalDate horaAlteracao
 ) {}

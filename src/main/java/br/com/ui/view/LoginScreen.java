@@ -1,8 +1,10 @@
 package br.com.ui.view;
 
+import br.com.auth.dto.LoginResponse;
 import br.com.auth.service.AuthService;
 import br.com.common.service.ApiServiceException;
 import br.com.ui.util.ColorPalette;
+import br.com.acesso.enums.TipoAcesso; // Importar TipoAcesso
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,15 +67,23 @@ public class LoginScreen extends JFrame {
         String password = new String(passwordField.getPassword());
 
         try {
-            authService.login(username, password);
+            LoginResponse loginResponse = authService.login(username, password);
 
-            // Se o login for bem-sucedido, abre a tela principal
-            this.dispose();
-            new MainScreen(username).setVisible(true); // Passa o nome de usuário para a tela principal
+            this.dispose(); // Fecha a tela de login
 
+            if (loginResponse.tipoAcesso() == TipoAcesso.ADMINISTRADOR || loginResponse.tipoAcesso() == TipoAcesso.GERENCIA) {
+                new MainScreen(username).setVisible(true);
+            } else if (loginResponse.tipoAcesso() == TipoAcesso.FUNCIONARIO) {
+                new AbastecimentoScreen(username).setVisible(true);
+            } else {
+                JOptionPane.showMessageDialog(this, "Tipo de acesso não reconhecido.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (ApiServiceException e) {
+            JOptionPane.showMessageDialog(this, "Erro na API: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         } catch (Exception e) {
-            // Trata erros de API ou outros problemas
-            JOptionPane.showMessageDialog(this, "Erro no login: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Erro inesperado: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }

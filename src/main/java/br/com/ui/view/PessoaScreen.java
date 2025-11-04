@@ -20,6 +20,7 @@ public class PessoaScreen extends JFrame {
     private JComboBox<TipoPessoa> tipoPessoaComboBox;
     private JTable tabelaPessoas;
     private DefaultTableModel tableModel;
+    private Long pessoaIdEmEdicao; // Novo campo para armazenar o ID da pessoa em edição
 
     private final PessoaService pessoaService;
 
@@ -67,9 +68,11 @@ public class PessoaScreen extends JFrame {
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
+        buttonsPanel.add(editarButton); // Adiciona o botão Editar
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
@@ -91,6 +94,7 @@ public class PessoaScreen extends JFrame {
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarPessoa());
         excluirButton.addActionListener(e -> excluirPessoa());
+        editarButton.addActionListener(e -> editarPessoa()); // Ação para o botão Editar
 
         carregarPessoas();
     }
@@ -127,8 +131,13 @@ public class PessoaScreen extends JFrame {
                     (TipoPessoa) tipoPessoaComboBox.getSelectedItem()
             );
 
-            pessoaService.createPessoa(request);
-            JOptionPane.showMessageDialog(this, "Pessoa salva com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            if (pessoaIdEmEdicao == null) { // Se não há ID em edição, é uma nova pessoa
+                pessoaService.createPessoa(request);
+                JOptionPane.showMessageDialog(this, "Pessoa salva com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Se há um ID em edição, é uma atualização
+                pessoaService.updatePessoa(pessoaIdEmEdicao, request);
+                JOptionPane.showMessageDialog(this, "Pessoa atualizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            }
             carregarPessoas();
             limparCampos();
 
@@ -140,6 +149,25 @@ public class PessoaScreen extends JFrame {
             JOptionPane.showMessageDialog(this, "Erro ao salvar pessoa: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void editarPessoa() {
+        int selectedRow = tabelaPessoas.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione uma pessoa para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        pessoaIdEmEdicao = (Long) tabelaPessoas.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        nomeCompletoField.setText(tabelaPessoas.getValueAt(selectedRow, 1).toString());
+        cpfCnpjField.setText(tabelaPessoas.getValueAt(selectedRow, 2).toString());
+        // CTPS pode ser nulo, então verificamos antes de tentar converter
+        Object ctpsValue = tabelaPessoas.getValueAt(selectedRow, 3);
+        numeroCtpsField.setText(ctpsValue != null ? ctpsValue.toString() : "");
+        dataNascimentoField.setText(tabelaPessoas.getValueAt(selectedRow, 4).toString());
+        tipoPessoaComboBox.setSelectedItem(TipoPessoa.valueOf(tabelaPessoas.getValueAt(selectedRow, 5).toString()));
+
+        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirPessoa() {
@@ -172,6 +200,7 @@ public class PessoaScreen extends JFrame {
         dataNascimentoField.setText("");
         tipoPessoaComboBox.setSelectedIndex(0);
         tabelaPessoas.clearSelection();
+        pessoaIdEmEdicao = null; // Limpa o ID em edição
     }
 
     // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos

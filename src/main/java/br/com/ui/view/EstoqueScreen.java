@@ -108,9 +108,9 @@ public class EstoqueScreen extends JFrame {
                 tableModel.addRow(new Object[]{
                         estoque.id(),
                         estoque.quantidade(),
-                        estoque.localTannque(),
+                        estoque.localTanque(),
                         estoque.localEndereco(),
-                        estoque.localFabricacao(),
+                        estoque.loteFabricacao(),
                         estoque.dataValidade(),
                         estoque.tipoEstoque()
                 });
@@ -157,7 +157,7 @@ public class EstoqueScreen extends JFrame {
             return;
         }
 
-        Long id = (Long) tabelaEstoque.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+        Long id = (Long) tableModel.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o estoque selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {

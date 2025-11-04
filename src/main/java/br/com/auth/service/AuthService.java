@@ -16,12 +16,13 @@ public class AuthService {
         this.apiClient = new ApiClient();
     }
 
-    public void login(String username, String password) throws IOException, ApiServiceException {
+    public LoginResponse login(String username, String password) throws IOException, ApiServiceException {
         LoginRequest request = new LoginRequest(username, password);
         LoginResponse response = apiClient.post("/acessos/login", request, LoginResponse.class);
 
         if (response != null && response.token() != null) {
             SessionManager.getInstance().setToken(response.token());
+            return response; // Retorna a resposta completa
         } else {
             System.out.println("DEBUG: LoginResponse recebido: " + response);
             if (response != null) {

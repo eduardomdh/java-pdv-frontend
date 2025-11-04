@@ -29,6 +29,10 @@ public class ContatoService {
         return apiClient.post("/contatos", contatoRequest, ContatoResponse.class);
     }
 
+    public ContatoResponse updateContato(Long id, ContatoRequest contatoRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/contatos/" + id, contatoRequest, ContatoResponse.class);
+    }
+
     public void deleteContato(Long id) throws IOException, ApiServiceException {
         apiClient.delete("/contatos/" + id);
     }

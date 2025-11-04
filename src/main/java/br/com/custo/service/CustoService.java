@@ -29,6 +29,10 @@ public class CustoService {
         return apiClient.post("/custos", custoRequest, CustoResponse.class);
     }
 
+    public CustoResponse updateCusto(Long id, CustoRequest custoRequest) throws IOException, ApiServiceException {
+        return apiClient.put("/custos/" + id, custoRequest, CustoResponse.class);
+    }
+
     public void deleteCusto(Long id) throws IOException, ApiServiceException {
         apiClient.delete("/custos/" + id);
     }

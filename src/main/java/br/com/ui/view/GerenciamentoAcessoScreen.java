@@ -19,6 +19,7 @@ public class GerenciamentoAcessoScreen extends JFrame {
     private JComboBox<TipoAcesso> tipoAcessoComboBox;
     private JTable tabelaUsuarios;
     private DefaultTableModel tableModel;
+    private Long acessoIdEmEdicao; // Novo campo para armazenar o ID do acesso em edição
 
     private final AcessoService acessoService;
 
@@ -61,9 +62,11 @@ public class GerenciamentoAcessoScreen extends JFrame {
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
+        buttonsPanel.add(editarButton); // Adiciona o botão Editar
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
@@ -85,6 +88,7 @@ public class GerenciamentoAcessoScreen extends JFrame {
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarAcesso());
         excluirButton.addActionListener(e -> excluirAcesso());
+        editarButton.addActionListener(e -> editarAcesso()); // Ação para o botão Editar
 
         carregarAcessos();
     }
@@ -114,14 +118,37 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
         try {
             AcessoRequest request = new AcessoRequest(login, password, tipoAcesso);
-            acessoService.createAcesso(request);
-            JOptionPane.showMessageDialog(this, "Acesso salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            if (acessoIdEmEdicao == null) { // Se não há ID em edição, é um novo acesso
+                acessoService.createAcesso(request);
+                JOptionPane.showMessageDialog(this, "Acesso salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Se há um ID em edição, é uma atualização
+                // Para atualização de acesso, geralmente não se envia a senha novamente ou se tem um endpoint específico.
+                // Por simplicidade, vou usar o mesmo request, mas em um cenário real, a senha pode ser tratada de forma diferente.
+                acessoService.updateAcesso(acessoIdEmEdicao, request);
+                JOptionPane.showMessageDialog(this, "Acesso atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            }
             carregarAcessos();
             limparCampos();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar acesso: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void editarAcesso() {
+        int selectedRow = tabelaUsuarios.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um acesso para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        acessoIdEmEdicao = (Long) tabelaUsuarios.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        loginField.setText(tabelaUsuarios.getValueAt(selectedRow, 1).toString());
+        // Não preenchemos o campo de senha por segurança
+        passwordField.setText(""); // Limpa o campo de senha
+        tipoAcessoComboBox.setSelectedItem(TipoAcesso.valueOf(tabelaUsuarios.getValueAt(selectedRow, 2).toString()));
+
+        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição (exceto senha). Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirAcesso() {
@@ -152,6 +179,7 @@ public class GerenciamentoAcessoScreen extends JFrame {
         passwordField.setText("");
         tipoAcessoComboBox.setSelectedIndex(0);
         tabelaUsuarios.clearSelection();
+        acessoIdEmEdicao = null; // Limpa o ID em edição
     }
 
     // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
