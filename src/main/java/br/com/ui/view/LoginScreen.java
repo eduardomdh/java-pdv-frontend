@@ -1,22 +1,22 @@
 package br.com.ui.view;
 
-import br.com.model.User;
-import br.com.model.UserRepository;
+import br.com.auth.service.AuthService;
+import br.com.common.service.ApiServiceException;
 import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Optional;
 
 public class LoginScreen extends JFrame {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
-    private final UserRepository userRepository;
+    private final AuthService authService;
 
     public LoginScreen() {
-        this.userRepository = UserRepository.getInstance();
+        this.authService = new AuthService();
+
         setTitle("Login - PDV Posto de Combustível");
         setSize(400, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -60,6 +60,25 @@ public class LoginScreen extends JFrame {
         loginButton.addActionListener(e -> authenticateUser());
     }
 
+    private void authenticateUser() {
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+
+        try {
+            authService.login(username, password);
+
+            // Se o login for bem-sucedido, abre a tela principal
+            this.dispose();
+            new MainScreen(username).setVisible(true); // Passa o nome de usuário para a tela principal
+
+        } catch (Exception e) {
+            // Trata erros de API ou outros problemas
+            JOptionPane.showMessageDialog(this, "Erro no login: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos...
     private JLabel createStyledLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(ColorPalette.TEXT);
@@ -103,28 +122,6 @@ public class LoginScreen extends JFrame {
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         button.setPreferredSize(new Dimension(120, 40));
         return button;
-    }
-
-    private void authenticateUser() {
-        String username = usernameField.getText();
-        String password = new String(passwordField.getPassword());
-
-        Optional<User> userOpt = userRepository.findByLogin(username);
-
-        if (userOpt.isPresent() && userOpt.get().getPassword().equals(password)) {
-            User user = userOpt.get();
-            String role = user.getTipoAcesso();
-
-            this.dispose();
-
-            if ("funcionario".equals(role)) {
-                new AbastecimentoScreen(user.getLogin()).setVisible(true);
-            } else if ("gerente".equals(role) || "administrador".equals(role)) {
-                new MainScreen(user.getLogin()).setVisible(true);
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Usuário ou senha inválidos.", "Erro de Login", JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     public static void main(String[] args) {

@@ -1,29 +1,30 @@
 package br.com.ui.view;
 
-import br.com.model.User;
-import br.com.model.UserRepository;
+import br.com.acesso.dto.AcessoRequest;
+import br.com.acesso.dto.AcessoResponse;
+import br.com.acesso.enums.TipoAcesso;
+import br.com.acesso.service.AcessoService;
 import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
-import java.util.Optional;
 
 public class GerenciamentoAcessoScreen extends JFrame {
 
     private JTextField loginField;
     private JPasswordField passwordField;
-    private JComboBox<String> tipoAcessoComboBox;
+    private JComboBox<TipoAcesso> tipoAcessoComboBox;
     private JTable tabelaUsuarios;
     private DefaultTableModel tableModel;
-    private final UserRepository userRepository;
-    private Long selectedUserId = null;
+
+    private final AcessoService acessoService;
 
     public GerenciamentoAcessoScreen() {
-        this.userRepository = UserRepository.getInstance();
+        this.acessoService = new AcessoService();
+
         setTitle("Gerenciamento de Acesso");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -52,22 +53,8 @@ public class GerenciamentoAcessoScreen extends JFrame {
         fieldsPanel.add(passwordField);
 
         fieldsPanel.add(createStyledLabel("Tipo de Acesso:"));
-        tipoAcessoComboBox = new JComboBox<>(new String[]{"funcionario", "gerente", "administrador"});
+        tipoAcessoComboBox = new JComboBox<>(TipoAcesso.values());
         fieldsPanel.add(tipoAcessoComboBox);
-        tipoAcessoComboBox.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (isSelected) {
-                    setBackground(ColorPalette.PRIMARY);
-                    setForeground(ColorPalette.WHITE_TEXT);
-                } else {
-                    setBackground(ColorPalette.PANEL_BACKGROUND);
-                    setForeground(ColorPalette.TEXT);
-                }
-                return this;
-            }
-        });
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
@@ -81,31 +68,9 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
         // --- Tabela ---
         String[] colunas = {"ID", "Login", "Tipo de Acesso"};
-        tableModel = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Torna a tabela não editável
-            }
-        };
+        tableModel = new DefaultTableModel(colunas, 0);
         tabelaUsuarios = new JTable(tableModel);
-
-        // Estilo da Tabela
-        tabelaUsuarios.setBackground(ColorPalette.PANEL_BACKGROUND);
-        tabelaUsuarios.setForeground(ColorPalette.TEXT);
-        tabelaUsuarios.setGridColor(new Color(200, 200, 200));
-        tabelaUsuarios.setSelectionBackground(ColorPalette.PRIMARY);
-        tabelaUsuarios.setSelectionForeground(ColorPalette.WHITE_TEXT);
-        tabelaUsuarios.setFont(new Font("Arial", Font.PLAIN, 14));
-        tabelaUsuarios.setRowHeight(25);
-
-        JTableHeader tableHeader = tabelaUsuarios.getTableHeader();
-        tableHeader.setBackground(ColorPalette.PRIMARY);
-        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
-        tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
-
         JScrollPane tableScrollPane = new JScrollPane(tabelaUsuarios);
-        tableScrollPane.getViewport().setBackground(ColorPalette.BACKGROUND);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 2));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -118,78 +83,78 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
         // --- Ações ---
         novoButton.addActionListener(e -> limparCampos());
-        salvarButton.addActionListener(e -> salvarUsuario());
-        excluirButton.addActionListener(e -> excluirUsuario());
+        salvarButton.addActionListener(e -> salvarAcesso());
+        excluirButton.addActionListener(e -> excluirAcesso());
 
-        tabelaUsuarios.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = tabelaUsuarios.getSelectedRow();
-                if (selectedRow != -1) {
-                    selectedUserId = (Long) tableModel.getValueAt(selectedRow, 0);
-                    Optional<User> userOpt = userRepository.findById(selectedUserId);
-                    userOpt.ifPresent(user -> {
-                        loginField.setText(user.getLogin());
-                        passwordField.setText(user.getPassword());
-                        tipoAcessoComboBox.setSelectedItem(user.getTipoAcesso());
-                    });
-                }
-            }
-        });
-
-        carregarUsuarios();
+        carregarAcessos();
     }
 
-    private void carregarUsuarios() {
-        tableModel.setRowCount(0); // Limpa a tabela
-        List<User> users = userRepository.getAllUsers();
-        for (User user : users) {
-            tableModel.addRow(new Object[]{user.getId(), user.getLogin(), user.getTipoAcesso()});
+    private void carregarAcessos() {
+        tableModel.setRowCount(0);
+        try {
+            List<AcessoResponse> acessos = acessoService.findAcessos();
+            for (AcessoResponse acesso : acessos) {
+                tableModel.addRow(new Object[]{acesso.id(), acesso.usuario(), acesso.tipoAcesso()});
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar acessos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
-    private void salvarUsuario() {
+    private void salvarAcesso() {
         String login = loginField.getText();
         String password = new String(passwordField.getPassword());
-        String tipoAcesso = (String) tipoAcessoComboBox.getSelectedItem();
+        TipoAcesso tipoAcesso = (TipoAcesso) tipoAcessoComboBox.getSelectedItem();
 
         if (login.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Login e senha são obrigatórios.", "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        if (selectedUserId == null) { // Create
-            User newUser = new User(null, login, password, tipoAcesso);
-            userRepository.addUser(newUser);
-        } else { // Update
-            User updatedUser = new User(selectedUserId, login, password, tipoAcesso);
-            userRepository.updateUser(updatedUser);
+        try {
+            AcessoRequest request = new AcessoRequest(login, password, tipoAcesso);
+            acessoService.createAcesso(request);
+            JOptionPane.showMessageDialog(this, "Acesso salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            carregarAcessos();
+            limparCampos();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar acesso: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
-        carregarUsuarios();
-        limparCampos();
     }
 
-    private void excluirUsuario() {
-        if (selectedUserId == null) {
-            JOptionPane.showMessageDialog(this, "Selecione um usuário para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+    private void excluirAcesso() {
+        int selectedRow = tabelaUsuarios.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um acesso para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o usuário selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        Long id = (Long) tabelaUsuarios.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o acesso selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            userRepository.removeUser(selectedUserId);
-            carregarUsuarios();
-            limparCampos();
+            try {
+                acessoService.deleteAcesso(id);
+                JOptionPane.showMessageDialog(this, "Acesso excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregarAcessos(); // Recarrega a lista da API
+                limparCampos();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Erro ao excluir acesso: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         }
     }
 
     private void limparCampos() {
-        selectedUserId = null;
         loginField.setText("");
         passwordField.setText("");
         tipoAcessoComboBox.setSelectedIndex(0);
         tabelaUsuarios.clearSelection();
     }
 
+    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
     private JLabel createStyledLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(ColorPalette.TEXT);
@@ -232,5 +197,11 @@ public class GerenciamentoAcessoScreen extends JFrame {
         button.setForeground(foreground);
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new GerenciamentoAcessoScreen().setVisible(true);
+        });
     }
 }

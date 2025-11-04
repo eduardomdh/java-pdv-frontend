@@ -1,33 +1,32 @@
 package br.com.ui.view;
 
-import br.com.model.Custo;
+import br.com.custo.dto.CustoRequest;
+import br.com.custo.dto.CustoResponse;
+import br.com.custo.enums.TipoCusto;
+import br.com.custo.service.CustoService;
 import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Locale;
 
 public class CustoScreen extends JFrame {
 
-    private JTextField descricaoField, valorField, dataVencimentoField;
+    private JTextField impostoField, custoVariavelField, custoFixoField, margemLucroField, dataProcessamentoField;
+    private JComboBox<TipoCusto> tipoCustoComboBox;
     private JTable tabelaCustos;
     private DefaultTableModel tableModel;
-    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-    private List<Custo> custos = new ArrayList<>(); // Internal list to simulate data
-    private long nextCustoId = 1; // For simulating new costs
+
+    private final CustoService custoService;
 
     public CustoScreen() {
-        setTitle("Gerenciamento de Custos Operacionais");
+        this.custoService = new CustoService();
+
+        setTitle("Gerenciamento de Custos");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -36,24 +35,36 @@ public class CustoScreen extends JFrame {
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
-        JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(null, "Dados do Custo", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
-        fieldsPanel.add(createStyledLabel("Descrição (ex: Conta de Água):", ColorPalette.TEXT));
-        descricaoField = createStyledTextField();
-        fieldsPanel.add(descricaoField);
+        fieldsPanel.add(createStyledLabel("Imposto:", ColorPalette.TEXT));
+        impostoField = createStyledTextField();
+        fieldsPanel.add(impostoField);
 
-        fieldsPanel.add(createStyledLabel("Valor (ex: 480.50):", ColorPalette.TEXT));
-        valorField = createStyledTextField();
-        fieldsPanel.add(valorField);
+        fieldsPanel.add(createStyledLabel("Custo Variável:", ColorPalette.TEXT));
+        custoVariavelField = createStyledTextField();
+        fieldsPanel.add(custoVariavelField);
 
-        fieldsPanel.add(createStyledLabel("Data de Vencimento (dd/mm/yyyy):", ColorPalette.TEXT));
-        dataVencimentoField = createStyledTextField();
-        fieldsPanel.add(dataVencimentoField);
+        fieldsPanel.add(createStyledLabel("Custo Fixo:", ColorPalette.TEXT));
+        custoFixoField = createStyledTextField();
+        fieldsPanel.add(custoFixoField);
+
+        fieldsPanel.add(createStyledLabel("Margem de Lucro:", ColorPalette.TEXT));
+        margemLucroField = createStyledTextField();
+        fieldsPanel.add(margemLucroField);
+
+        fieldsPanel.add(createStyledLabel("Data Processamento (yyyy-mm-dd):", ColorPalette.TEXT));
+        dataProcessamentoField = createStyledTextField();
+        fieldsPanel.add(dataProcessamentoField);
+
+        fieldsPanel.add(createStyledLabel("Tipo de Custo:", ColorPalette.TEXT));
+        tipoCustoComboBox = new JComboBox<>(TipoCusto.values());
+        fieldsPanel.add(tipoCustoComboBox);
 
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
@@ -66,29 +77,10 @@ public class CustoScreen extends JFrame {
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
-        String[] colunas = {"ID", "Descrição", "Valor", "Data de Vencimento"};
-        tableModel = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
+        String[] colunas = {"ID", "Imposto", "C. Variável", "C. Fixo", "M. Lucro", "Data", "Tipo"};
+        tableModel = new DefaultTableModel(colunas, 0);
         tabelaCustos = new JTable(tableModel);
-
-        // Estilo da Tabela
-        tabelaCustos.setBackground(ColorPalette.PANEL_BACKGROUND);
-        tabelaCustos.setForeground(ColorPalette.TEXT);
-        tabelaCustos.setGridColor(new Color(200, 200, 200));
-        tabelaCustos.setSelectionBackground(ColorPalette.PRIMARY);
-        tabelaCustos.setSelectionForeground(ColorPalette.WHITE_TEXT);
-        tabelaCustos.setFont(new Font("Arial", Font.PLAIN, 14));
-        tabelaCustos.setRowHeight(25);
-
-        JTableHeader tableHeader = tabelaCustos.getTableHeader();
-        tableHeader.setBackground(ColorPalette.PRIMARY);
-        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
-        tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
-
         JScrollPane tableScrollPane = new JScrollPane(tabelaCustos);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -99,15 +91,101 @@ public class CustoScreen extends JFrame {
 
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
-        // --- Ações ---
+        // Ações
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarCusto());
         excluirButton.addActionListener(e -> excluirCusto());
-        tabelaCustos.getSelectionModel().addListSelectionListener(e -> preencherCamposComSelecao());
 
         carregarCustos();
     }
 
+    private void carregarCustos() {
+        tableModel.setRowCount(0);
+        try {
+            List<CustoResponse> custos = custoService.findCustos();
+            for (CustoResponse custo : custos) {
+                tableModel.addRow(new Object[]{
+                        custo.id(),
+                        custo.imposto(),
+                        custo.custoVariavel(),
+                        custo.custoFixo(),
+                        custo.margemLucro(),
+                        custo.dataProcessamento(),
+                        custo.tipoCusto()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar custos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void salvarCusto() {
+        try {
+            double imposto = Double.parseDouble(impostoField.getText());
+            double custoVariavel = Double.parseDouble(custoVariavelField.getText());
+            double custoFixo = Double.parseDouble(custoFixoField.getText());
+            double margemLucro = Double.parseDouble(margemLucroField.getText());
+            LocalDate dataProcessamento = LocalDate.parse(dataProcessamentoField.getText());
+
+            CustoRequest request = new CustoRequest(
+                    imposto,
+                    custoVariavel,
+                    custoFixo,
+                    margemLucro,
+                    dataProcessamento,
+                    (TipoCusto) tipoCustoComboBox.getSelectedItem()
+            );
+
+            custoService.createCusto(request);
+            JOptionPane.showMessageDialog(this, "Custo salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            carregarCustos();
+            limparCampos();
+
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, "Formato de data inválido. Use yyyy-mm-dd.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Formato de número inválido para um dos campos de custo.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar custo: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void excluirCusto() {
+        int selectedRow = tabelaCustos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um custo para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Long id = (Long) tabelaCustos.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o custo selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                custoService.deleteCusto(id);
+                JOptionPane.showMessageDialog(this, "Custo excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregarCustos(); // Recarrega a lista da API
+                limparCampos();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Erro ao excluir custo: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void limparCampos() {
+        impostoField.setText("");
+        custoVariavelField.setText("");
+        custoFixoField.setText("");
+        margemLucroField.setText("");
+        dataProcessamentoField.setText("");
+        tipoCustoComboBox.setSelectedIndex(0);
+        tabelaCustos.clearSelection();
+    }
+
+    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -139,67 +217,9 @@ public class CustoScreen extends JFrame {
         return button;
     }
 
-    private void carregarCustos() {
-        tableModel.setRowCount(0);
-        for (Custo c : custos) {
-            tableModel.addRow(new Object[]{
-                c.getId(),
-                c.getDescricao(),
-                currencyFormat.format(c.getValor()),
-                c.getDataVencimento().format(dateFormatter)
-            });
-        }
-    }
-
-    private void salvarCusto() {
-        try {
-            String valorTexto = valorField.getText().replaceAll("[^0-9,.]", "").replace(".", "").replace(",", ".");
-            Custo novoCusto = new Custo(
-                nextCustoId++,
-                descricaoField.getText(),
-                new BigDecimal(valorTexto),
-                LocalDate.parse(dataVencimentoField.getText(), dateFormatter)
-            );
-            custos.add(novoCusto);
-            carregarCustos();
-            limparCampos();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar custo: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void excluirCusto() {
-        int selectedRow = tabelaCustos.getSelectedRow();
-        if (selectedRow != -1) {
-            Long id = (Long) tableModel.getValueAt(selectedRow, 0);
-            custos.removeIf(c -> c.getId().equals(id));
-            carregarCustos();
-            limparCampos();
-        } else {
-            JOptionPane.showMessageDialog(this, "Selecione um custo para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private void preencherCamposComSelecao() {
-        int selectedRow = tabelaCustos.getSelectedRow();
-        if (selectedRow != -1) {
-            Long id = (Long) tableModel.getValueAt(selectedRow, 0);
-            Custo custoSelecionado = custos.stream()
-                .filter(c -> c.getId().equals(id))
-                .findFirst().orElse(null);
-
-            if (custoSelecionado != null) {
-                descricaoField.setText(custoSelecionado.getDescricao());
-                valorField.setText(custoSelecionado.getValor().toPlainString());
-                dataVencimentoField.setText(custoSelecionado.getDataVencimento().format(dateFormatter));
-            }
-        }
-    }
-
-    private void limparCampos() {
-        descricaoField.setText("");
-        valorField.setText("");
-        dataVencimentoField.setText("");
-        tabelaCustos.clearSelection();
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new CustoScreen().setVisible(true);
+        });
     }
 }

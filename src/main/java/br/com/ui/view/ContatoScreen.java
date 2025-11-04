@@ -1,25 +1,29 @@
 package br.com.ui.view;
 
-import br.com.model.Contato;
+import br.com.contato.dto.ContatoRequest;
+import br.com.contato.dto.ContatoResponse;
+import br.com.contato.enums.TipoContato;
+import br.com.contato.service.ContatoService;
 import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ContatoScreen extends JFrame {
 
     private JTextField telefoneField, emailField, enderecoField;
+    private JComboBox<TipoContato> tipoContatoComboBox;
     private JTable tabelaContatos;
     private DefaultTableModel tableModel;
-    private List<Contato> contatos = new ArrayList<>(); // Internal list to simulate data
-    private long nextContatoId = 1; // For simulating new contacts
+
+    private final ContatoService contatoService;
 
     public ContatoScreen() {
+        this.contatoService = new ContatoService();
+
         setTitle("Gerenciamento de Contatos");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -29,7 +33,7 @@ public class ContatoScreen extends JFrame {
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
-        JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel fieldsPanel = new JPanel(new GridLayout(4, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(null, "Dados do Contato", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
@@ -48,6 +52,10 @@ public class ContatoScreen extends JFrame {
         enderecoField = createStyledTextField();
         fieldsPanel.add(enderecoField);
 
+        fieldsPanel.add(createStyledLabel("Tipo de Contato:", ColorPalette.TEXT));
+        tipoContatoComboBox = new JComboBox<>(TipoContato.values());
+        fieldsPanel.add(tipoContatoComboBox);
+
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
@@ -59,29 +67,10 @@ public class ContatoScreen extends JFrame {
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
-        String[] colunas = {"ID", "Telefone", "Email", "Endereço"};
-        tableModel = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
+        String[] colunas = {"ID", "Telefone", "Email", "Endereço", "Tipo"};
+        tableModel = new DefaultTableModel(colunas, 0);
         tabelaContatos = new JTable(tableModel);
-
-        // Estilo da Tabela
-        tabelaContatos.setBackground(ColorPalette.PANEL_BACKGROUND);
-        tabelaContatos.setForeground(ColorPalette.TEXT);
-        tabelaContatos.setGridColor(new Color(200, 200, 200));
-        tabelaContatos.setSelectionBackground(ColorPalette.PRIMARY);
-        tabelaContatos.setSelectionForeground(ColorPalette.WHITE_TEXT);
-        tabelaContatos.setFont(new Font("Arial", Font.PLAIN, 14));
-        tabelaContatos.setRowHeight(25);
-
-        JTableHeader tableHeader = tabelaContatos.getTableHeader();
-        tableHeader.setBackground(ColorPalette.PRIMARY);
-        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
-        tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
-
         JScrollPane tableScrollPane = new JScrollPane(tabelaContatos);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -92,15 +81,85 @@ public class ContatoScreen extends JFrame {
 
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
-        // --- Ações ---
+        // Ações
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarContato());
         excluirButton.addActionListener(e -> excluirContato());
-        tabelaContatos.getSelectionModel().addListSelectionListener(e -> preencherCamposComSelecao());
 
         carregarContatos();
     }
 
+    private void carregarContatos() {
+        tableModel.setRowCount(0);
+        try {
+            List<ContatoResponse> contatos = contatoService.findContatos();
+            for (ContatoResponse contato : contatos) {
+                tableModel.addRow(new Object[]{
+                        contato.id(),
+                        contato.telefone(),
+                        contato.email(),
+                        contato.endereco(),
+                        contato.tipoContato()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar contatos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void salvarContato() {
+        try {
+            ContatoRequest request = new ContatoRequest(
+                    telefoneField.getText(),
+                    emailField.getText(),
+                    enderecoField.getText(),
+                    (TipoContato) tipoContatoComboBox.getSelectedItem()
+            );
+
+            contatoService.createContato(request);
+            JOptionPane.showMessageDialog(this, "Contato salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            carregarContatos();
+            limparCampos();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar contato: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void excluirContato() {
+        int selectedRow = tabelaContatos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um contato para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Long id = (Long) tabelaContatos.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o contato selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                contatoService.deleteContato(id);
+                JOptionPane.showMessageDialog(this, "Contato excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregarContatos(); // Recarrega a lista da API
+                limparCampos();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Erro ao excluir contato: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void limparCampos() {
+        telefoneField.setText("");
+        emailField.setText("");
+        enderecoField.setText("");
+        tipoContatoComboBox.setSelectedIndex(0);
+        tabelaContatos.clearSelection();
+    }
+
+    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -132,45 +191,9 @@ public class ContatoScreen extends JFrame {
         return button;
     }
 
-    private void carregarContatos() {
-        tableModel.setRowCount(0);
-        for (Contato c : contatos) {
-            tableModel.addRow(new Object[]{c.getId(), c.getTelefone(), c.getEmail(), c.getEndereco()});
-        }
-    }
-
-    private void salvarContato() {
-        Contato novoContato = new Contato(nextContatoId++, telefoneField.getText(), emailField.getText(), enderecoField.getText());
-        contatos.add(novoContato);
-        carregarContatos();
-        limparCampos();
-    }
-
-    private void excluirContato() {
-        int selectedRow = tabelaContatos.getSelectedRow();
-        if (selectedRow != -1) {
-            Long id = (Long) tableModel.getValueAt(selectedRow, 0);
-            contatos.removeIf(c -> c.getId().equals(id));
-            carregarContatos();
-            limparCampos();
-        } else {
-            JOptionPane.showMessageDialog(this, "Selecione um contato para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private void preencherCamposComSelecao() {
-        int selectedRow = tabelaContatos.getSelectedRow();
-        if (selectedRow != -1) {
-            telefoneField.setText((String) tableModel.getValueAt(selectedRow, 1));
-            emailField.setText((String) tableModel.getValueAt(selectedRow, 2));
-            enderecoField.setText((String) tableModel.getValueAt(selectedRow, 3));
-        }
-    }
-
-    private void limparCampos() {
-        telefoneField.setText("");
-        emailField.setText("");
-        enderecoField.setText("");
-        tabelaContatos.clearSelection();
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new ContatoScreen().setVisible(true);
+        });
     }
 }

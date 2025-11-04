@@ -1,20 +1,32 @@
 package br.com.ui.view;
 
+import br.com.estoque.dto.EstoqueRequest;
+import br.com.estoque.dto.EstoqueResponse;
+import br.com.estoque.enums.TipoEstoque;
+import br.com.estoque.service.EstoqueService;
 import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 public class EstoqueScreen extends JFrame {
 
     private JTextField quantidadeField, localTanqueField, localEnderecoField, loteFabricacaoField, dataValidadeField;
+    private JComboBox<TipoEstoque> tipoEstoqueComboBox;
     private JTable tabelaEstoque;
     private DefaultTableModel tableModel;
 
+    private final EstoqueService estoqueService;
+
     public EstoqueScreen() {
+        this.estoqueService = new EstoqueService();
+
         setTitle("Gerenciamento de Estoque");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -24,7 +36,7 @@ public class EstoqueScreen extends JFrame {
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
         // --- Painel de Campos ---
-        JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(null, "Dados do Estoque", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
@@ -51,6 +63,10 @@ public class EstoqueScreen extends JFrame {
         dataValidadeField = createStyledTextField();
         fieldsPanel.add(dataValidadeField);
 
+        fieldsPanel.add(createStyledLabel("Tipo de Estoque:", ColorPalette.TEXT));
+        tipoEstoqueComboBox = new JComboBox<>(TipoEstoque.values());
+        fieldsPanel.add(tipoEstoqueComboBox);
+
         // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
@@ -62,26 +78,10 @@ public class EstoqueScreen extends JFrame {
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
-        String[] colunas = {"ID", "Quantidade", "Tanque", "Endereço", "Lote", "Validade"};
+        String[] colunas = {"ID", "Quantidade", "Tanque", "Endereço", "Lote", "Validade", "Tipo"};
         tableModel = new DefaultTableModel(colunas, 0);
         tabelaEstoque = new JTable(tableModel);
-
-        // Estilo da Tabela
-        tabelaEstoque.setBackground(ColorPalette.PANEL_BACKGROUND);
-        tabelaEstoque.setForeground(ColorPalette.TEXT);
-        tabelaEstoque.setGridColor(new Color(200, 200, 200));
-        tabelaEstoque.setSelectionBackground(ColorPalette.PRIMARY);
-        tabelaEstoque.setSelectionForeground(ColorPalette.WHITE_TEXT);
-        tabelaEstoque.setFont(new Font("Arial", Font.PLAIN, 14));
-        tabelaEstoque.setRowHeight(25);
-
-        JTableHeader tableHeader = tabelaEstoque.getTableHeader();
-        tableHeader.setBackground(ColorPalette.PRIMARY);
-        tableHeader.setForeground(ColorPalette.WHITE_TEXT);
-        tableHeader.setFont(new Font("Arial", Font.BOLD, 14));
-
         JScrollPane tableScrollPane = new JScrollPane(tabelaEstoque);
-        tableScrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setOpaque(false);
@@ -94,41 +94,96 @@ public class EstoqueScreen extends JFrame {
 
         // Ações
         novoButton.addActionListener(e -> limparCampos());
+        salvarButton.addActionListener(e -> salvarEstoque());
+        excluirButton.addActionListener(e -> excluirEstoque());
 
-        salvarButton.addActionListener(e -> {
-            String[] rowData = {
-                String.valueOf(tableModel.getRowCount() + 1),
-                quantidadeField.getText(),
-                localTanqueField.getText(),
-                localEnderecoField.getText(),
-                loteFabricacaoField.getText(),
-                dataValidadeField.getText()
-            };
-            tableModel.addRow(rowData);
-            limparCampos();
-        });
-
-        excluirButton.addActionListener(e -> {
-            int selectedRow = tabelaEstoque.getSelectedRow();
-            if (selectedRow != -1) {
-                tableModel.removeRow(selectedRow);
-            }
-        });
-
-        tabelaEstoque.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = tabelaEstoque.getSelectedRow();
-                if (selectedRow != -1) {
-                    quantidadeField.setText((String) tableModel.getValueAt(selectedRow, 1));
-                    localTanqueField.setText((String) tableModel.getValueAt(selectedRow, 2));
-                    localEnderecoField.setText((String) tableModel.getValueAt(selectedRow, 3));
-                    loteFabricacaoField.setText((String) tableModel.getValueAt(selectedRow, 4));
-                    dataValidadeField.setText((String) tableModel.getValueAt(selectedRow, 5));
-                }
-            }
-        });
+        carregarEstoques();
     }
 
+    private void carregarEstoques() {
+        tableModel.setRowCount(0);
+        try {
+            List<EstoqueResponse> estoques = estoqueService.findEstoques();
+            for (EstoqueResponse estoque : estoques) {
+                tableModel.addRow(new Object[]{
+                        estoque.id(),
+                        estoque.quantidade(),
+                        estoque.localTannque(),
+                        estoque.localEndereco(),
+                        estoque.localFabricacao(),
+                        estoque.dataValidade(),
+                        estoque.tipoEstoque()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void salvarEstoque() {
+        try {
+            BigDecimal quantidade = new BigDecimal(quantidadeField.getText());
+            LocalDate dataValidade = LocalDate.parse(dataValidadeField.getText());
+
+            EstoqueRequest request = new EstoqueRequest(
+                    quantidade,
+                    localTanqueField.getText(),
+                    localEnderecoField.getText(),
+                    loteFabricacaoField.getText(),
+                    dataValidade,
+                    (TipoEstoque) tipoEstoqueComboBox.getSelectedItem()
+            );
+
+            estoqueService.createEstoque(request);
+            JOptionPane.showMessageDialog(this, "Estoque salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            carregarEstoques();
+            limparCampos();
+
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, "Formato de data inválido. Use yyyy-mm-dd.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Formato de quantidade inválido.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void excluirEstoque() {
+        int selectedRow = tabelaEstoque.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um estoque para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Long id = (Long) tabelaEstoque.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o estoque selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                estoqueService.deleteEstoque(id);
+                JOptionPane.showMessageDialog(this, "Estoque excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregarEstoques(); // Recarrega a lista da API
+                limparCampos();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Erro ao excluir estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void limparCampos() {
+        quantidadeField.setText("");
+        localTanqueField.setText("");
+        localEnderecoField.setText("");
+        loteFabricacaoField.setText("");
+        dataValidadeField.setText("");
+        tipoEstoqueComboBox.setSelectedIndex(0);
+        tabelaEstoque.clearSelection();
+    }
+
+    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -158,15 +213,6 @@ public class EstoqueScreen extends JFrame {
         button.setForeground(foreground);
         button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         return button;
-    }
-
-    private void limparCampos() {
-        quantidadeField.setText("");
-        localTanqueField.setText("");
-        localEnderecoField.setText("");
-        loteFabricacaoField.setText("");
-        dataValidadeField.setText("");
-        tabelaEstoque.clearSelection();
     }
 
     public static void main(String[] args) {
