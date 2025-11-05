@@ -5,6 +5,7 @@ import br.com.acesso.dto.AcessoResponse;
 import br.com.acesso.enums.TipoAcesso;
 import br.com.acesso.service.AcessoService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -229,6 +230,7 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new GerenciamentoAcessoScreen().setVisible(true);
         });
     }

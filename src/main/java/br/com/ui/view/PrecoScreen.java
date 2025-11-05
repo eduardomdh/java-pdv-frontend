@@ -4,6 +4,7 @@ import br.com.preco.dto.PrecoRequest;
 import br.com.preco.dto.PrecoResponse;
 import br.com.preco.service.PrecoService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -213,6 +214,7 @@ public class PrecoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new PrecoScreen().setVisible(true);
         });
     }

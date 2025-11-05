@@ -5,6 +5,7 @@ import br.com.estoque.dto.EstoqueResponse;
 import br.com.estoque.enums.TipoEstoque;
 import br.com.estoque.service.EstoqueService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -21,6 +22,7 @@ public class EstoqueScreen extends JFrame {
     private JComboBox<TipoEstoque> tipoEstoqueComboBox;
     private JTable tabelaEstoque;
     private DefaultTableModel tableModel;
+    private Long estoqueIdEmEdicao; // Adicionado: Declaração da variável
 
     private final EstoqueService estoqueService;
 
@@ -72,9 +74,11 @@ public class EstoqueScreen extends JFrame {
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
+        buttonsPanel.add(editarButton); // Adiciona o botão Editar
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
@@ -96,6 +100,7 @@ public class EstoqueScreen extends JFrame {
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarEstoque());
         excluirButton.addActionListener(e -> excluirEstoque());
+        editarButton.addActionListener(e -> editarEstoque()); // Ação para o botão Editar
 
         carregarEstoques();
     }
@@ -135,8 +140,13 @@ public class EstoqueScreen extends JFrame {
                     (TipoEstoque) tipoEstoqueComboBox.getSelectedItem()
             );
 
-            estoqueService.createEstoque(request);
-            JOptionPane.showMessageDialog(this, "Estoque salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            if (estoqueIdEmEdicao == null) { // Se não há ID em edição, é um novo estoque
+                estoqueService.createEstoque(request);
+                JOptionPane.showMessageDialog(this, "Estoque salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else { // Se há um ID em edição, é uma atualização
+                estoqueService.updateEstoque(estoqueIdEmEdicao, request);
+                JOptionPane.showMessageDialog(this, "Estoque atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            }
             carregarEstoques();
             limparCampos();
 
@@ -148,6 +158,25 @@ public class EstoqueScreen extends JFrame {
             JOptionPane.showMessageDialog(this, "Erro ao salvar estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+
+    private void editarEstoque() {
+        int selectedRow = tabelaEstoque.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um estoque para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Pega o ID da primeira coluna
+        estoqueIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
+        quantidadeField.setText(tableModel.getValueAt(selectedRow, 1).toString());
+        localTanqueField.setText(tableModel.getValueAt(selectedRow, 2).toString());
+        localEnderecoField.setText(tableModel.getValueAt(selectedRow, 3).toString());
+        loteFabricacaoField.setText(tableModel.getValueAt(selectedRow, 4).toString());
+        dataValidadeField.setText(tableModel.getValueAt(selectedRow, 5).toString());
+        tipoEstoqueComboBox.setSelectedItem(TipoEstoque.valueOf(tableModel.getValueAt(selectedRow, 6).toString()));
+
+        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirEstoque() {
@@ -181,6 +210,7 @@ public class EstoqueScreen extends JFrame {
         dataValidadeField.setText("");
         tipoEstoqueComboBox.setSelectedIndex(0);
         tabelaEstoque.clearSelection();
+        estoqueIdEmEdicao = null; // Adicionado: Limpa o ID em edição
     }
 
     // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
@@ -217,6 +247,7 @@ public class EstoqueScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new EstoqueScreen().setVisible(true);
         });
     }

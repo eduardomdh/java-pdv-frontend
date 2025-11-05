@@ -1,8 +1,10 @@
 package br.com.ui.view;
 
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class MainScreen extends JFrame {
@@ -12,17 +14,18 @@ public class MainScreen extends JFrame {
     public MainScreen(String username) {
         this.loggedInUsername = username;
         setTitle("Painel Principal - PDV Posto de Combustível");
-        setSize(800, 700);
+        setSize(1000, 700); // Aumentar um pouco a largura para o menu lateral
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setLayout(new BorderLayout(10, 10)); // Espaçamento entre as áreas
 
-        // --- Painel do Cabeçalho ---
+        // --- Painel do Cabeçalho (NORTH) ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(ColorPalette.PRIMARY);
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        headerPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         JLabel userLabel = new JLabel("Usuário: " + loggedInUsername, SwingConstants.LEFT);
         userLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -39,6 +42,8 @@ public class MainScreen extends JFrame {
         logoutButton.setForeground(ColorPalette.PRIMARY);
         logoutButton.setBackground(ColorPalette.BACKGROUND);
         logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(new EmptyBorder(5, 15, 5, 15));
         logoutButton.addActionListener(e -> {
             this.dispose();
             new LoginScreen().setVisible(true);
@@ -47,59 +52,48 @@ public class MainScreen extends JFrame {
 
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
-        // --- Painel de Botões com GridBagLayout ---
-        JPanel buttonPanel = new JPanel(new GridBagLayout());
-        buttonPanel.setOpaque(false);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // --- Painel de Navegação Lateral (WEST) ---
+        JPanel navPanel = new JPanel();
+        navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS)); // Botões verticais
+        navPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        navPanel.setBorder(new EmptyBorder(20, 10, 20, 10)); // Padding interno
+        navPanel.setPreferredSize(new Dimension(250, getHeight())); // Largura fixa para o menu
 
-        // Botões
-        JButton productButton = createMenuButton("Gerenciamento de Produtos", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
-        JButton customerButton = createMenuButton("Gerenciamento de Clientes", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
-        JButton stockButton = createMenuButton("Gerenciamento de Estoque", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
-        JButton contactButton = createMenuButton("Gerenciamento de Contatos", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
-        JButton costButton = createMenuButton("Gerenciamento de Custos", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
-        JButton priceButton = createMenuButton("Gerenciamento de Preços", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
-        JButton accessButton = createMenuButton("Gerenciamento de Acesso", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT);
+        // Botões de Navegação
+        JButton productButton = createNavButton("Produtos");
+        JButton customerButton = createNavButton("Clientes");
+        JButton stockButton = createNavButton("Estoque");
+        JButton contactButton = createNavButton("Contatos");
+        JButton costButton = createNavButton("Custos");
+        JButton priceButton = createNavButton("Preços");
+        JButton accessButton = createNavButton("Acesso");
 
-        // Adicionando botões ao painel com GridBagConstraints
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        buttonPanel.add(productButton, gbc);
+        navPanel.add(productButton);
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Espaçamento entre botões
+        navPanel.add(customerButton);
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        navPanel.add(stockButton);
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        navPanel.add(contactButton);
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        navPanel.add(costButton);
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        navPanel.add(priceButton);
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        navPanel.add(accessButton);
+        navPanel.add(Box.createVerticalGlue()); // Empurra os botões para cima
 
-        gbc.gridx = 1;
-        buttonPanel.add(customerButton, gbc);
+        contentPane.add(navPanel, BorderLayout.WEST);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        buttonPanel.add(stockButton, gbc);
-
-        gbc.gridx = 1;
-        buttonPanel.add(contactButton, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        buttonPanel.add(costButton, gbc);
-
-        gbc.gridx = 1;
-        buttonPanel.add(priceButton, gbc);
-
-        // Botão de Acesso centralizado
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        buttonPanel.add(accessButton, gbc);
-
-        contentPane.add(buttonPanel, BorderLayout.CENTER);
-
-        // --- Rodapé ---
-        JLabel footerLabel = new JLabel("Versão 1.0.0", SwingConstants.CENTER);
-        footerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        footerLabel.setForeground(Color.GRAY);
-        footerLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        contentPane.add(footerLabel, BorderLayout.SOUTH);
+        // --- Painel de Conteúdo Principal (CENTER) ---
+        JPanel mainContentPanel = new JPanel(new BorderLayout());
+        mainContentPanel.setBackground(ColorPalette.BACKGROUND);
+        mainContentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        JLabel welcomeLabel = new JLabel("Selecione uma opção no menu lateral", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        welcomeLabel.setForeground(ColorPalette.TEXT);
+        mainContentPanel.add(welcomeLabel, BorderLayout.CENTER);
+        contentPane.add(mainContentPanel, BorderLayout.CENTER);
 
         // --- Ações dos Botões ---
         productButton.addActionListener(e -> new ProdutoScreen().setVisible(true));
@@ -111,20 +105,24 @@ public class MainScreen extends JFrame {
         accessButton.addActionListener(e -> new GerenciamentoAcessoScreen().setVisible(true));
     }
 
-    private JButton createMenuButton(String text, Color background, Color foreground) {
+    // Método para criar botões de navegação com estilo minimalista
+    private JButton createNavButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 16));
+        button.setAlignmentX(Component.LEFT_ALIGNMENT); // Alinha o texto à esquerda
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50)); // Altura fixa, largura expansível
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setPreferredSize(new Dimension(300, 70));
         button.setFocusPainted(false);
-        button.setBackground(background);
-        button.setForeground(foreground);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setBackground(ColorPalette.PANEL_BACKGROUND); // Fundo sutil
+        button.setForeground(ColorPalette.TEXT); // Cor do texto
+        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15)); // Padding interno
+        button.setHorizontalAlignment(SwingConstants.LEFT); // Alinha o texto à esquerda
         return button;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new MainScreen("Admin").setVisible(true);
         });
     }

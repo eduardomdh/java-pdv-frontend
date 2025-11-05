@@ -5,9 +5,10 @@ import br.com.auth.service.AuthService;
 import br.com.common.service.ApiServiceException;
 import br.com.ui.util.ColorPalette;
 import br.com.acesso.enums.TipoAcesso; // Importar TipoAcesso
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.*; // Adicionado novamente
 
 public class LoginScreen extends JFrame {
 
@@ -136,6 +137,7 @@ public class LoginScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new LoginScreen().setVisible(true);
         });
     }

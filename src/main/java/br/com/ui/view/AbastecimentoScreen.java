@@ -1,10 +1,11 @@
 package br.com.ui.view;
 
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import java.awt.*;
+import java.awt.*; // Adicionado novamente
 
 public class AbastecimentoScreen extends JFrame {
 
@@ -153,6 +154,7 @@ public class AbastecimentoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new AbastecimentoScreen("TesteUser").setVisible(true);
         });
     }

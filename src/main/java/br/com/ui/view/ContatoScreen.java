@@ -5,6 +5,7 @@ import br.com.contato.dto.ContatoResponse;
 import br.com.contato.enums.TipoContato;
 import br.com.contato.service.ContatoService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -219,6 +220,7 @@ public class ContatoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new ContatoScreen().setVisible(true);
         });
     }

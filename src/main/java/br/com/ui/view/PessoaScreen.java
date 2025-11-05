@@ -5,6 +5,7 @@ import br.com.pessoa.dto.PessoaResponse;
 import br.com.pessoa.enums.TipoPessoa;
 import br.com.pessoa.service.PessoaService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -237,6 +238,7 @@ public class PessoaScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new PessoaScreen().setVisible(true);
         });
     }

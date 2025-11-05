@@ -5,6 +5,7 @@ import br.com.custo.dto.CustoResponse;
 import br.com.custo.enums.TipoCusto;
 import br.com.custo.service.CustoService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -247,6 +248,7 @@ public class CustoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new CustoScreen().setVisible(true);
         });
     }

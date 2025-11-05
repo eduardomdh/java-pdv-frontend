@@ -5,6 +5,7 @@ import br.com.produto.dto.ProdutoResponse;
 import br.com.produto.enums.TipoProduto;
 import br.com.produto.service.ProdutoService;
 import br.com.ui.util.ColorPalette;
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -234,6 +235,7 @@ public class ProdutoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            FlatLightLaf.setup(); // Inicializa o FlatLaf
             new ProdutoScreen().setVisible(true);
         });
     }
