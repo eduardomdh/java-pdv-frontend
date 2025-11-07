@@ -3,6 +3,8 @@ package br.com.ui.view;
 import br.com.preco.dto.PrecoRequest;
 import br.com.preco.dto.PrecoResponse;
 import br.com.preco.service.PrecoService;
+import br.com.produto.dto.ProdutoResponse;
+import br.com.produto.service.ProdutoService;
 import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -13,35 +15,52 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PrecoScreen extends JFrame {
 
     private JTextField valorField, dataAlteracaoField;
+    private JTextField produtoField; // Alterado de JComboBox para JTextField
+    private JButton selecionarProdutoButton;
+    private ProdutoResponse produtoSelecionado; // Armazena o produto selecionado
     private JTable tabelaPrecos;
     private DefaultTableModel tableModel;
-    private Long precoIdEmEdicao; // Novo campo para armazenar o ID do preço em edição
+    private Long precoIdEmEdicao;
 
     private final PrecoService precoService;
+    private final ProdutoService produtoService;
+    private Map<Long, ProdutoResponse> produtosMap; // Mantido para exibição na tabela
 
     public PrecoScreen() {
         this.precoService = new PrecoService();
+        this.produtoService = new ProdutoService();
+        this.produtosMap = new HashMap<>();
 
         setTitle("Gerenciamento de Preços");
-        setSize(800, 600);
+        setSize(800, 650);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
-        // --- Painel de Campos ---
-        JPanel fieldsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(null, "Dados de Preço", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
+
+        fieldsPanel.add(createStyledLabel("Produto:", ColorPalette.TEXT));
+        JPanel produtoPanel = new JPanel(new BorderLayout());
+        produtoField = createStyledTextField();
+        produtoField.setEditable(false);
+        selecionarProdutoButton = new JButton("Selecionar");
+        produtoPanel.add(produtoField, BorderLayout.CENTER);
+        produtoPanel.add(selecionarProdutoButton, BorderLayout.EAST);
+        fieldsPanel.add(produtoPanel);
 
         fieldsPanel.add(createStyledLabel("Valor (ex: 5.89):", ColorPalette.TEXT));
         valorField = createStyledTextField();
@@ -50,20 +69,18 @@ public class PrecoScreen extends JFrame {
         dataAlteracaoField = createStyledTextField();
         fieldsPanel.add(dataAlteracaoField);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
-        buttonsPanel.add(editarButton); // Adiciona o botão Editar
+        buttonsPanel.add(editarButton);
         buttonsPanel.add(excluirButton);
 
-        // --- Tabela ---
-        String[] colunas = {"ID", "Valor", "Data de Alteração"};
+        String[] colunas = {"ID", "Produto", "Valor", "Data de Alteração"};
         tableModel = new DefaultTableModel(colunas, 0);
         tabelaPrecos = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(tabelaPrecos);
@@ -78,12 +95,37 @@ public class PrecoScreen extends JFrame {
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
         // --- Ações ---
+        selecionarProdutoButton.addActionListener(e -> abrirSelecaoProduto());
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarPreco());
         excluirButton.addActionListener(e -> excluirPreco());
-        editarButton.addActionListener(e -> editarPreco()); // Ação para o botão Editar
+        editarButton.addActionListener(e -> editarPreco());
 
+        carregarMapaProdutos(); // Carrega o mapa de produtos para exibição na tabela
         carregarPrecos();
+    }
+
+    private void abrirSelecaoProduto() {
+        SelecaoProdutoScreen selecaoProdutoScreen = new SelecaoProdutoScreen(this);
+        selecaoProdutoScreen.setVisible(true);
+        ProdutoResponse produto = selecaoProdutoScreen.getProdutoSelecionado();
+        if (produto != null) {
+            this.produtoSelecionado = produto;
+            produtoField.setText(produto.nome());
+        }
+    }
+
+    private void carregarMapaProdutos() {
+        try {
+            List<ProdutoResponse> produtos = produtoService.findProducts();
+            produtosMap.clear();
+            for (ProdutoResponse produto : produtos) {
+                produtosMap.put(produto.id(), produto);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar mapa de produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
     private void carregarPrecos() {
@@ -91,8 +133,11 @@ public class PrecoScreen extends JFrame {
         try {
             List<PrecoResponse> precos = precoService.findPrecos();
             for (PrecoResponse preco : precos) {
+                ProdutoResponse produtoAssociado = produtosMap.get(preco.produtoId());
+                String nomeProduto = (produtoAssociado != null) ? produtoAssociado.nome() : "Produto Desconhecido";
                 tableModel.addRow(new Object[]{
                         preco.id(),
+                        nomeProduto,
                         preco.valor(),
                         preco.dataAlteracao()
                 });
@@ -108,16 +153,22 @@ public class PrecoScreen extends JFrame {
             BigDecimal valor = new BigDecimal(valorField.getText());
             LocalDate dataAlteracao = LocalDate.parse(dataAlteracaoField.getText());
 
+            if (produtoSelecionado == null) {
+                JOptionPane.showMessageDialog(this, "Selecione um produto.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             PrecoRequest request = new PrecoRequest(
                     valor,
                     dataAlteracao,
-                    LocalDate.now()
+                    LocalDate.now(),
+                    produtoSelecionado.id()
             );
 
-            if (precoIdEmEdicao == null) { // Se não há ID em edição, é um novo preço
+            if (precoIdEmEdicao == null) {
                 precoService.createPreco(request);
                 JOptionPane.showMessageDialog(this, "Preço salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else { // Se há um ID em edição, é uma atualização
+            } else {
                 precoService.updatePreco(precoIdEmEdicao, request);
                 JOptionPane.showMessageDialog(this, "Preço atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -141,9 +192,26 @@ public class PrecoScreen extends JFrame {
             return;
         }
 
-        precoIdEmEdicao = (Long) tabelaPrecos.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
-        valorField.setText(tabelaPrecos.getValueAt(selectedRow, 1).toString());
-        dataAlteracaoField.setText(tabelaPrecos.getValueAt(selectedRow, 2).toString());
+        precoIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
+        try {
+            PrecoResponse precoParaEditar = precoService.findPrecoById(precoIdEmEdicao);
+            if (precoParaEditar != null) {
+                valorField.setText(precoParaEditar.valor().toString());
+                dataAlteracaoField.setText(precoParaEditar.dataAlteracao().toString());
+
+                ProdutoResponse produtoAssociado = produtosMap.get(precoParaEditar.produtoId());
+                if (produtoAssociado != null) {
+                    this.produtoSelecionado = produtoAssociado;
+                    produtoField.setText(produtoAssociado.nome());
+                } else {
+                    this.produtoSelecionado = null;
+                    produtoField.setText("");
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar dados do preço para edição: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
 
         JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -155,15 +223,14 @@ public class PrecoScreen extends JFrame {
             return;
         }
 
-        Long id = (Long) tabelaPrecos.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+        Long id = (Long) tableModel.getValueAt(selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o preço selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                // PrecoService não tem delete, então vou simular ou adicionar se necessário
-                // precoService.deletePreco(id);
+                // O backend precisa implementar a exclusão de preços
                 JOptionPane.showMessageDialog(this, "Funcionalidade de exclusão ainda não implementada no backend para Preço.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                carregarPrecos(); // Recarrega a lista da API
+                carregarPrecos();
                 limparCampos();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Erro ao excluir preço: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
@@ -175,11 +242,12 @@ public class PrecoScreen extends JFrame {
     private void limparCampos() {
         valorField.setText("");
         dataAlteracaoField.setText("");
+        produtoField.setText("");
+        produtoSelecionado = null;
         tabelaPrecos.clearSelection();
-        precoIdEmEdicao = null; // Limpa o ID em edição
+        precoIdEmEdicao = null;
     }
 
-    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -214,7 +282,7 @@ public class PrecoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new PrecoScreen().setVisible(true);
         });
     }

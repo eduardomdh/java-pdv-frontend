@@ -11,5 +11,6 @@ public record EstoqueResponse(
     String localEndereco,
     String loteFabricacao,
     LocalDate dataValidade,
-    TipoEstoque tipoEstoque
+    TipoEstoque tipoEstoque,
+    Long produtoId
 ) {}

@@ -4,6 +4,8 @@ import br.com.estoque.dto.EstoqueRequest;
 import br.com.estoque.dto.EstoqueResponse;
 import br.com.estoque.enums.TipoEstoque;
 import br.com.estoque.service.EstoqueService;
+import br.com.produto.dto.ProdutoResponse;
+import br.com.produto.service.ProdutoService;
 import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -14,36 +16,53 @@ import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EstoqueScreen extends JFrame {
 
     private JTextField quantidadeField, localTanqueField, localEnderecoField, loteFabricacaoField, dataValidadeField;
     private JComboBox<TipoEstoque> tipoEstoqueComboBox;
+    private JTextField produtoField; // Alterado de JComboBox para JTextField
+    private JButton selecionarProdutoButton;
+    private ProdutoResponse produtoSelecionado; // Armazena o produto selecionado
     private JTable tabelaEstoque;
     private DefaultTableModel tableModel;
-    private Long estoqueIdEmEdicao; // Adicionado: Declaração da variável
+    private Long estoqueIdEmEdicao;
 
     private final EstoqueService estoqueService;
+    private final ProdutoService produtoService;
+    private Map<Long, ProdutoResponse> produtosMap; // Mantido para exibição na tabela
 
     public EstoqueScreen() {
         this.estoqueService = new EstoqueService();
+        this.produtoService = new ProdutoService();
+        this.produtosMap = new HashMap<>();
 
         setTitle("Gerenciamento de Estoque");
-        setSize(800, 600);
+        setSize(800, 650);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
-        // --- Painel de Campos ---
-        JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+        JPanel fieldsPanel = new JPanel(new GridLayout(7, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(null, "Dados do Estoque", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
+
+        fieldsPanel.add(createStyledLabel("Produto:", ColorPalette.TEXT));
+        JPanel produtoPanel = new JPanel(new BorderLayout());
+        produtoField = createStyledTextField();
+        produtoField.setEditable(false);
+        selecionarProdutoButton = new JButton("Selecionar");
+        produtoPanel.add(produtoField, BorderLayout.CENTER);
+        produtoPanel.add(selecionarProdutoButton, BorderLayout.EAST);
+        fieldsPanel.add(produtoPanel);
 
         fieldsPanel.add(createStyledLabel("Quantidade:", ColorPalette.TEXT));
         quantidadeField = createStyledTextField();
@@ -69,20 +88,18 @@ public class EstoqueScreen extends JFrame {
         tipoEstoqueComboBox = new JComboBox<>(TipoEstoque.values());
         fieldsPanel.add(tipoEstoqueComboBox);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
-        buttonsPanel.add(editarButton); // Adiciona o botão Editar
+        buttonsPanel.add(editarButton);
         buttonsPanel.add(excluirButton);
 
-        // --- Tabela ---
-        String[] colunas = {"ID", "Quantidade", "Tanque", "Endereço", "Lote", "Validade", "Tipo"};
+        String[] colunas = {"ID", "Produto", "Quantidade", "Tanque", "Endereço", "Lote", "Validade", "Tipo"};
         tableModel = new DefaultTableModel(colunas, 0);
         tabelaEstoque = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(tabelaEstoque);
@@ -97,12 +114,37 @@ public class EstoqueScreen extends JFrame {
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
         // Ações
+        selecionarProdutoButton.addActionListener(e -> abrirSelecaoProduto());
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarEstoque());
         excluirButton.addActionListener(e -> excluirEstoque());
-        editarButton.addActionListener(e -> editarEstoque()); // Ação para o botão Editar
+        editarButton.addActionListener(e -> editarEstoque());
 
+        carregarMapaProdutos(); // Carrega o mapa de produtos para exibição na tabela
         carregarEstoques();
+    }
+
+    private void abrirSelecaoProduto() {
+        SelecaoProdutoScreen selecaoProdutoScreen = new SelecaoProdutoScreen(this);
+        selecaoProdutoScreen.setVisible(true);
+        ProdutoResponse produto = selecaoProdutoScreen.getProdutoSelecionado();
+        if (produto != null) {
+            this.produtoSelecionado = produto;
+            produtoField.setText(produto.nome());
+        }
+    }
+
+    private void carregarMapaProdutos() {
+        try {
+            List<ProdutoResponse> produtos = produtoService.findProducts();
+            produtosMap.clear();
+            for (ProdutoResponse produto : produtos) {
+                produtosMap.put(produto.id(), produto);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar mapa de produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
     private void carregarEstoques() {
@@ -110,8 +152,11 @@ public class EstoqueScreen extends JFrame {
         try {
             List<EstoqueResponse> estoques = estoqueService.findEstoques();
             for (EstoqueResponse estoque : estoques) {
+                ProdutoResponse produtoAssociado = produtosMap.get(estoque.produtoId());
+                String nomeProduto = (produtoAssociado != null) ? produtoAssociado.nome() : "Produto Desconhecido";
                 tableModel.addRow(new Object[]{
                         estoque.id(),
+                        nomeProduto,
                         estoque.quantidade(),
                         estoque.localTanque(),
                         estoque.localEndereco(),
@@ -131,19 +176,25 @@ public class EstoqueScreen extends JFrame {
             BigDecimal quantidade = new BigDecimal(quantidadeField.getText());
             LocalDate dataValidade = LocalDate.parse(dataValidadeField.getText());
 
+            if (produtoSelecionado == null) {
+                JOptionPane.showMessageDialog(this, "Selecione um produto.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             EstoqueRequest request = new EstoqueRequest(
                     quantidade,
                     localTanqueField.getText(),
                     localEnderecoField.getText(),
                     loteFabricacaoField.getText(),
                     dataValidade,
-                    (TipoEstoque) tipoEstoqueComboBox.getSelectedItem()
+                    (TipoEstoque) tipoEstoqueComboBox.getSelectedItem(),
+                    produtoSelecionado.id()
             );
 
-            if (estoqueIdEmEdicao == null) { // Se não há ID em edição, é um novo estoque
+            if (estoqueIdEmEdicao == null) {
                 estoqueService.createEstoque(request);
                 JOptionPane.showMessageDialog(this, "Estoque salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else { // Se há um ID em edição, é uma atualização
+            } else {
                 estoqueService.updateEstoque(estoqueIdEmEdicao, request);
                 JOptionPane.showMessageDialog(this, "Estoque atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -167,14 +218,30 @@ public class EstoqueScreen extends JFrame {
             return;
         }
 
-        // Pega o ID da primeira coluna
         estoqueIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
-        quantidadeField.setText(tableModel.getValueAt(selectedRow, 1).toString());
-        localTanqueField.setText(tableModel.getValueAt(selectedRow, 2).toString());
-        localEnderecoField.setText(tableModel.getValueAt(selectedRow, 3).toString());
-        loteFabricacaoField.setText(tableModel.getValueAt(selectedRow, 4).toString());
-        dataValidadeField.setText(tableModel.getValueAt(selectedRow, 5).toString());
-        tipoEstoqueComboBox.setSelectedItem(TipoEstoque.valueOf(tableModel.getValueAt(selectedRow, 6).toString()));
+        try {
+            EstoqueResponse estoqueParaEditar = estoqueService.findEstoqueById(estoqueIdEmEdicao);
+            if (estoqueParaEditar != null) {
+                quantidadeField.setText(estoqueParaEditar.quantidade().toString());
+                localTanqueField.setText(estoqueParaEditar.localTanque());
+                localEnderecoField.setText(estoqueParaEditar.localEndereco());
+                loteFabricacaoField.setText(estoqueParaEditar.loteFabricacao());
+                dataValidadeField.setText(estoqueParaEditar.dataValidade().toString());
+                tipoEstoqueComboBox.setSelectedItem(estoqueParaEditar.tipoEstoque());
+
+                ProdutoResponse produtoAssociado = produtosMap.get(estoqueParaEditar.produtoId());
+                if (produtoAssociado != null) {
+                    this.produtoSelecionado = produtoAssociado;
+                    produtoField.setText(produtoAssociado.nome());
+                } else {
+                    this.produtoSelecionado = null;
+                    produtoField.setText("");
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar dados do estoque para edição: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
 
         JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -186,14 +253,14 @@ public class EstoqueScreen extends JFrame {
             return;
         }
 
-        Long id = (Long) tableModel.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+        Long id = (Long) tableModel.getValueAt(selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o estoque selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 estoqueService.deleteEstoque(id);
                 JOptionPane.showMessageDialog(this, "Estoque excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarEstoques(); // Recarrega a lista da API
+                carregarEstoques();
                 limparCampos();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Erro ao excluir estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
@@ -209,11 +276,12 @@ public class EstoqueScreen extends JFrame {
         loteFabricacaoField.setText("");
         dataValidadeField.setText("");
         tipoEstoqueComboBox.setSelectedIndex(0);
+        produtoField.setText("");
+        produtoSelecionado = null;
         tabelaEstoque.clearSelection();
-        estoqueIdEmEdicao = null; // Adicionado: Limpa o ID em edição
+        estoqueIdEmEdicao = null;
     }
 
-    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -247,7 +315,7 @@ public class EstoqueScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new EstoqueScreen().setVisible(true);
         });
     }

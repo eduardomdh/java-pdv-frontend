@@ -23,6 +23,10 @@ public class PrecoService {
         return apiClient.get("/precos", responseType);
     }
 
+    public PrecoResponse findPrecoById(Long id) throws IOException, ApiServiceException {
+        return apiClient.get("/precos/" + id, PrecoResponse.class);
+    }
+
     public PrecoResponse createPreco(PrecoRequest precoRequest) throws IOException, ApiServiceException {
         return apiClient.post("/precos", precoRequest, PrecoResponse.class);
     }

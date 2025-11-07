@@ -25,6 +25,10 @@ public class EstoqueService {
         return estoqueListResponse.getEstoques(); // Extrair a lista de estoques
     }
 
+    public EstoqueResponse findEstoqueById(Long id) throws IOException, ApiServiceException {
+        return apiClient.get("/estoques/" + id, EstoqueResponse.class);
+    }
+
     public EstoqueResponse createEstoque(EstoqueRequest estoqueRequest) throws IOException, ApiServiceException {
         return apiClient.post("/estoques", estoqueRequest, EstoqueResponse.class);
     }

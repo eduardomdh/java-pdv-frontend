@@ -8,7 +8,8 @@ public record EstoqueRequest(
     BigDecimal quantidade,
     String localTanque,
     String localEndereco,
-    String localFabricacao,
+    String loteFabricacao,
     LocalDate dataValidade,
-    TipoEstoque tipoEstoque
+    TipoEstoque tipoEstoque,
+    Long produtoId
 ) {}
