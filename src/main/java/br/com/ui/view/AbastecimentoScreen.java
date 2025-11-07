@@ -1,18 +1,28 @@
 package br.com.ui.view;
 
+import br.com.api.dto.BombaDTO;
+import br.com.common.service.ApiServiceException;
+import br.com.service.BombaService;
 import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.*; // Adicionado novamente
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class AbastecimentoScreen extends JFrame {
 
     private String loggedInUsername;
+    private JPanel pumpsPanel;
+    private BombaService bombaService;
 
     public AbastecimentoScreen(String username) {
         this.loggedInUsername = username;
+        this.bombaService = new BombaService();
         setTitle("Central de Abastecimento - PDV Posto de Combustível");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -57,87 +67,116 @@ public class AbastecimentoScreen extends JFrame {
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
         // --- Painel de Bombas (com GridLayout) ---
-        JPanel pumpsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
+        pumpsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
         pumpsPanel.setOpaque(false);
         pumpsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Adiciona margem
 
-        // Seção B1 (Concluída)
-        pumpsPanel.add(createPumpSection("B1", "Etanol", "40 litros / R$ 4,50 por litro", "R$ 180,00", new String[]{"PIX", "Dinheiro (D)", "Cartão de Crédito (CC)", "Cartão de Débito (CD)"}, "Concluída", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT, Color.GREEN));
-
-        // Seção B2 (Ativa)
-        pumpsPanel.add(createPumpSection("B2", "Gasolina", "30 litros / R$ 6,50 por litro", "R$ 195,00", new String[]{"PIX", "Dinheiro (D)", "Cartão de Crédito (CC)", "Cartão de Débito (CD)"}, "Ativa", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT, Color.ORANGE));
-
-        // Seção B3 (Inativa)
-        pumpsPanel.add(createPumpSection("B3", "", "", "", new String[]{}, "INATIVA", ColorPalette.PANEL_BACKGROUND, ColorPalette.TEXT, Color.RED));
-
         contentPane.add(pumpsPanel, BorderLayout.CENTER);
+
+        carregarBombas();
     }
 
-    private JPanel createPumpSection(String pumpTitle, String fuel, String details, String totalValue, String[] paymentOptions, String status, Color panelBg, Color textC, Color statusColor) {
+    private void carregarBombas() {
+        System.out.println("Iniciando o carregamento das bombas...");
+        SwingWorker<List<BombaDTO>, Void> worker = new SwingWorker<List<BombaDTO>, Void>() {
+            @Override
+            protected List<BombaDTO> doInBackground() throws Exception {
+                System.out.println("Buscando bombas do backend...");
+                return bombaService.buscarTodas();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    pumpsPanel.removeAll();
+                    List<BombaDTO> bombas = get();
+                    System.out.println("Bombas recebidas: " + (bombas != null ? bombas.size() : "null"));
+
+                    if (bombas != null && !bombas.isEmpty()) {
+                        for (BombaDTO bomba : bombas) {
+                            System.out.println("Criando painel para a bomba: " + bomba.getNome());
+                            pumpsPanel.add(createPumpSection(bomba));
+                        }
+                    } else {
+                        System.out.println("Nenhuma bomba encontrada ou a lista está vazia.");
+                    }
+
+                    pumpsPanel.revalidate();
+                    pumpsPanel.repaint();
+                    System.out.println("Painel de bombas atualizado.");
+
+                } catch (InterruptedException | ExecutionException e) {
+                    Throwable cause = e.getCause();
+                    System.err.println("Erro ao carregar bombas: " + cause.getMessage());
+                    cause.printStackTrace();
+
+                    if (cause instanceof IOException || cause instanceof ApiServiceException) {
+                        JOptionPane.showMessageDialog(AbastecimentoScreen.this, "Erro ao carregar bombas: " + cause.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(AbastecimentoScreen.this, "Ocorreu um erro inesperado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private JPanel createPumpSection(BombaDTO bomba) {
         JPanel sectionPanel = new JPanel();
         sectionPanel.setLayout(new BoxLayout(sectionPanel, BoxLayout.Y_AXIS));
-        sectionPanel.setBackground(panelBg);
+        sectionPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         sectionPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200), 2),
                 BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
 
-        JLabel titleLabel = new JLabel(pumpTitle, SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel(bomba.getNome(), SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setForeground(textC);
+        titleLabel.setForeground(ColorPalette.TEXT);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         sectionPanel.add(titleLabel);
         sectionPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
-        if (!fuel.isEmpty()) {
-            sectionPanel.add(createStyledLabel("Combustível: " + fuel, textC, SwingConstants.CENTER));
-            sectionPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-            sectionPanel.add(createStyledLabel("<html><center>Detalhes: " + details + "</center></html>", textC, SwingConstants.CENTER));
-            sectionPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-            sectionPanel.add(createStyledLabel("Valor Total: " + totalValue, textC, SwingConstants.CENTER));
-            sectionPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-
-            // --- Radio Buttons para Opções de Pagamento ---
-            JPanel paymentPanel = new JPanel();
-            paymentPanel.setLayout(new BoxLayout(paymentPanel, BoxLayout.Y_AXIS));
-            paymentPanel.setBackground(panelBg);
-            TitledBorder paymentBorder = BorderFactory.createTitledBorder("Opções de Pagamento");
-            paymentBorder.setTitleColor(textC);
-            paymentPanel.setBorder(paymentBorder);
-            paymentPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            ButtonGroup paymentGroup = new ButtonGroup();
-            for (String option : paymentOptions) {
-                JRadioButton radioButton = new JRadioButton(option);
-                radioButton.setFont(new Font("Arial", Font.PLAIN, 14));
-                radioButton.setBackground(panelBg);
-                radioButton.setForeground(textC);
-                radioButton.setFocusPainted(false);
-                radioButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-                paymentGroup.add(radioButton);
-                paymentPanel.add(radioButton);
-            }
-            sectionPanel.add(paymentPanel);
-        }
-
         sectionPanel.add(Box.createVerticalGlue());
 
-        JLabel statusLabel = new JLabel("Status: " + status, SwingConstants.CENTER);
+        Color statusColor;
+        switch (bomba.getStatus()) {
+            case "ATIVA":
+                statusColor = Color.ORANGE;
+                break;
+            case "CONCLUIDA":
+                statusColor = Color.GREEN;
+                break;
+            default:
+                statusColor = Color.RED;
+                break;
+        }
+
+        JLabel statusLabel = new JLabel("Status: " + bomba.getStatus(), SwingConstants.CENTER);
         statusLabel.setFont(new Font("Arial", Font.BOLD, 20));
         statusLabel.setForeground(statusColor);
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         sectionPanel.add(statusLabel);
 
+        if (bomba.getStatus().equals("INATIVA")) {
+            sectionPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            sectionPanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    abrirDialogoAbastecimento(bomba);
+                }
+            });
+        }
+
         return sectionPanel;
     }
 
-    private JLabel createStyledLabel(String text, Color textColor, int horizontalAlignment) {
-        JLabel label = new JLabel(text, horizontalAlignment);
-        label.setForeground(textColor);
-        label.setFont(new Font("Arial", Font.PLAIN, 14));
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        return label;
+    private void abrirDialogoAbastecimento(BombaDTO bomba) {
+        AbastecimentoDialog dialog = new AbastecimentoDialog(this, bomba);
+        dialog.setVisible(true);
+        // Após o diálogo ser fechado, atualizamos a lista de bombas
+        carregarBombas();
     }
 
     private JButton createStyledButton(String text) {

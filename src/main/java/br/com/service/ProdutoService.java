@@ -2,12 +2,14 @@ package br.com.service;
 
 import br.com.api.client.ApiClient;
 import br.com.api.dto.PageResponse;
+import br.com.api.dto.ProdutoDTO;
 import br.com.api.dto.ProdutoRequest;
 import br.com.api.dto.ProdutoResponse;
 import br.com.common.service.ApiServiceException;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.util.List;
 
 public class ProdutoService {
 
@@ -27,5 +29,9 @@ public class ProdutoService {
 
     public ProdutoResponse getProdutoPorReferencia(String referencia) throws IOException, ApiServiceException {
         return apiClient.get("/produtos?referencia=" + referencia, ProdutoResponse.class);
+    }
+
+    public List<ProdutoDTO> buscarTodos() throws IOException, ApiServiceException {
+        return apiClient.get("/produtos/all", new TypeToken<List<ProdutoDTO>>() {}.getType());
     }
 }

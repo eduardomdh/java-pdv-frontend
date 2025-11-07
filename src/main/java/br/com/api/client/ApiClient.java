@@ -43,6 +43,13 @@ public class ApiClient {
         return execute(request, responseType);
     }
 
+    public <T> T put(String endpoint, Object body, Class<T> responseType) throws IOException, ApiServiceException {
+        String jsonBody = gson.toJson(body);
+        RequestBody requestBody = RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8"));
+        Request request = new Request.Builder().url(BASE_URL + endpoint).put(requestBody).build();
+        return execute(request, responseType);
+    }
+
     private <T> T execute(Request request, Type responseType) throws IOException, ApiServiceException {
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
@@ -50,6 +57,9 @@ public class ApiClient {
                 throw new ApiServiceException("Erro na API: " + response.code() + " " + response.message() + " - Detalhes: " + errorBody);
             }
             String responseBody = response.body().string();
+            if (responseType.equals(Void.class)) {
+                return null;
+            }
             return gson.fromJson(responseBody, responseType);
         }
     }
