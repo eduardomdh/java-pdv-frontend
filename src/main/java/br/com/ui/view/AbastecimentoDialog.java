@@ -22,6 +22,7 @@ public class AbastecimentoDialog extends JDialog {
     private JComboBox<String> combustivelComboBox;
     private JTextField litrosTextField;
     private JTextField reaisTextField;
+    private JComboBox<String> pagamentoComboBox;
     private ProdutoService produtoService;
     private List<ProdutoDTO> produtos;
 
@@ -29,15 +30,16 @@ public class AbastecimentoDialog extends JDialog {
     private ProdutoDTO produtoSelecionado;
     private double litrosAbastecidos;
     private double reaisAbastecidos;
+    private String formaPagamento;
     private boolean confirmado = false;
 
     public AbastecimentoDialog(Frame owner, BombaDTO bomba) {
         super(owner, "Abastecer Bomba " + bomba.getNome(), true);
         this.produtoService = new ProdutoService();
 
-        setSize(400, 300);
+        setSize(450, 350);
         setLocationRelativeTo(owner);
-        setLayout(new GridLayout(4, 2, 10, 10));
+        setLayout(new GridLayout(5, 2, 10, 10));
         getContentPane().setBackground(ColorPalette.BACKGROUND);
 
         // --- Componentes ---
@@ -52,6 +54,10 @@ public class AbastecimentoDialog extends JDialog {
         add(new JLabel("Reais (R$):"));
         reaisTextField = new JTextField();
         add(reaisTextField);
+
+        add(new JLabel("Forma de Pagamento:"));
+        pagamentoComboBox = new JComboBox<>(new String[]{"Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito"});
+        add(pagamentoComboBox);
 
         JButton okButton = new JButton("OK");
         add(new JLabel()); // Espaço em branco
@@ -105,8 +111,9 @@ public class AbastecimentoDialog extends JDialog {
                         return;
                     }
 
+                    formaPagamento = (String) pagamentoComboBox.getSelectedItem();
                     confirmado = true;
-                    dispose(); // Apenas fecha o diálogo
+                    dispose();
 
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "Valores inválidos.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -165,5 +172,9 @@ public class AbastecimentoDialog extends JDialog {
 
     public double getReaisAbastecidos() {
         return reaisAbastecidos;
+    }
+
+    public String getFormaPagamento() {
+        return formaPagamento;
     }
 }

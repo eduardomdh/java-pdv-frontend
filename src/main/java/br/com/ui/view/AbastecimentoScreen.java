@@ -220,6 +220,7 @@ public class AbastecimentoScreen extends JFrame {
                 ProdutoDTO produto = dialog.getProdutoSelecionado();
                 double litros = dialog.getLitrosAbastecidos();
                 double reais = dialog.getReaisAbastecidos();
+                String formaPagamento = dialog.getFormaPagamento();
                 new AnimacaoAbastecimentoDialog(this, bomba, produto, litros, reais).setVisible(true);
 
                 // 4. Após a animação, recarrega a tela de novo para mostrar o status CONCLUIDA
@@ -241,7 +242,7 @@ public class AbastecimentoScreen extends JFrame {
 
                     if (clienteSelecionado != null || consumidorNaoIdentificado) {
                         try {
-                            pdfService.gerarDanfeNfce(loggedInUsername, bomba, produto, litros, reais, clienteSelecionado);
+                            pdfService.gerarDanfeNfce(loggedInUsername, bomba, produto, litros, reais, clienteSelecionado, formaPagamento);
                             JOptionPane.showMessageDialog(this, "PDF da NFC-e gerado e aberto com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                         } catch (IOException ex) {
                             JOptionPane.showMessageDialog(this, "Erro ao gerar ou abrir o PDF: " + ex.getMessage(), "Erro de PDF", JOptionPane.ERROR_MESSAGE);

@@ -27,7 +27,8 @@ public class PdfService {
             ProdutoDTO produto,
             double litros,
             double reais,
-            PessoaResponse cliente
+            PessoaResponse cliente,
+            String formaPagamento
     ) throws IOException {
         long numeroNfce = nfcCounter.getAndIncrement();
         String chaveAcesso = gerarChaveAcesso();
@@ -105,16 +106,34 @@ public class PdfService {
                 contentStream.lineTo(550, 530);
                 contentStream.stroke();
 
-                // Informações do Consumidor
+                // Forma de Pagamento
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
                 contentStream.newLineAtOffset(50, 510);
-                contentStream.showText("Identificação do Consumidor");
+                contentStream.showText("Forma de Pagamento");
                 contentStream.endText();
 
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 10);
                 contentStream.newLineAtOffset(50, 490);
+                contentStream.showText(formaPagamento);
+                contentStream.endText();
+
+                // Linha Separadora
+                contentStream.moveTo(50, 470);
+                contentStream.lineTo(550, 470);
+                contentStream.stroke();
+
+                // Informações do Consumidor
+                contentStream.beginText();
+                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                contentStream.newLineAtOffset(50, 450);
+                contentStream.showText("Identificação do Consumidor");
+                contentStream.endText();
+
+                contentStream.beginText();
+                contentStream.setFont(PDType1Font.HELVETICA, 10);
+                contentStream.newLineAtOffset(50, 430);
                 if (cliente != null) {
                     contentStream.showText("CPF/CNPJ: " + cliente.cpfCnpj());
                     contentStream.newLineAtOffset(0, -15);
