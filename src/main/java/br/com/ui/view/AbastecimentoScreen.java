@@ -1,6 +1,7 @@
 package br.com.ui.view;
 
 import br.com.api.dto.BombaDTO;
+import br.com.api.dto.ProdutoDTO;
 import br.com.common.service.ApiServiceException;
 import br.com.service.BombaService;
 import br.com.ui.util.ColorPalette;
@@ -159,6 +160,7 @@ public class AbastecimentoScreen extends JFrame {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         sectionPanel.add(statusLabel);
 
+        // Lógica de interação baseada no status
         if (bomba.getStatus().equals("INATIVA")) {
             sectionPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             sectionPanel.addMouseListener(new MouseAdapter() {
@@ -167,6 +169,32 @@ public class AbastecimentoScreen extends JFrame {
                     abrirDialogoAbastecimento(bomba);
                 }
             });
+        } else if (bomba.getStatus().equals("CONCLUIDA")) {
+            sectionPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            sectionPanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    JOptionPane.showMessageDialog(AbastecimentoScreen.this,
+                            "Aguarde, preparando a bomba para um novo uso.",
+                            "Bomba em Preparação",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+            });
+
+            Timer timer = new Timer(5000, e -> {
+                System.out.println("Timer de 5s disparado para a bomba " + bomba.getNome() + ". Resetando para INATIVA.");
+                try {
+                    bombaService.atualizarStatus(bomba.getId(), "INATIVA");
+                    carregarBombas();
+                } catch (IOException | ApiServiceException ex) {
+                    JOptionPane.showMessageDialog(AbastecimentoScreen.this,
+                            "Erro ao resetar a bomba: " + ex.getMessage(),
+                            "Erro de API",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            timer.setRepeats(false);
+            timer.start();
         }
 
         return sectionPanel;
@@ -175,8 +203,28 @@ public class AbastecimentoScreen extends JFrame {
     private void abrirDialogoAbastecimento(BombaDTO bomba) {
         AbastecimentoDialog dialog = new AbastecimentoDialog(this, bomba);
         dialog.setVisible(true);
-        // Após o diálogo ser fechado, atualizamos a lista de bombas
-        carregarBombas();
+
+        if (dialog.isConfirmado()) {
+            try {
+                // 1. Atualiza o status para ATIVA
+                bombaService.atualizarStatus(bomba.getId(), "ATIVA");
+
+                // 2. Recarrega a tela IMEDIATAMENTE para mostrar a bomba laranja
+                carregarBombas();
+
+                // 3. Abre a animação (que agora é independente)
+                ProdutoDTO produto = dialog.getProdutoSelecionado();
+                double litros = dialog.getLitrosAbastecidos();
+                double reais = dialog.getReaisAbastecidos();
+                new AnimacaoAbastecimentoDialog(this, bomba, produto, litros, reais).setVisible(true);
+
+                // 4. Após a animação, recarrega a tela de novo para mostrar o status CONCLUIDA
+                carregarBombas();
+
+            } catch (IOException | ApiServiceException e) {
+                JOptionPane.showMessageDialog(this, "Erro ao iniciar abastecimento: " + e.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private JButton createStyledButton(String text) {

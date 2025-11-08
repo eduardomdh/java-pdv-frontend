@@ -77,7 +77,7 @@ public class PessoaScreen extends JFrame {
         buttonsPanel.add(excluirButton);
 
         // --- Tabela ---
-        String[] colunas = {"ID", "Nome", "CPF/CNPJ", "Nascimento", "Tipo"};
+        String[] colunas = {"ID", "Nome", "CPF/CNPJ", "Nº CTPS", "Nascimento", "Tipo"};
         tableModel = new DefaultTableModel(colunas, 0);
         tabelaPessoas = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(tabelaPessoas);
@@ -109,6 +109,7 @@ public class PessoaScreen extends JFrame {
                         pessoa.id(),
                         pessoa.nomeCompleto(),
                         pessoa.cpfCnpj(),
+                        pessoa.numeroCtps(),
                         pessoa.dataNascimento(),
                         pessoa.tipoPessoa()
                 });
@@ -159,14 +160,22 @@ public class PessoaScreen extends JFrame {
             return;
         }
 
-        pessoaIdEmEdicao = (Long) tabelaPessoas.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        pessoaIdEmEdicao = (Long) tabelaPessoas.getValueAt(selectedRow, 0);
         nomeCompletoField.setText(tabelaPessoas.getValueAt(selectedRow, 1).toString());
         cpfCnpjField.setText(tabelaPessoas.getValueAt(selectedRow, 2).toString());
-        // CTPS pode ser nulo, então verificamos antes de tentar converter
+
         Object ctpsValue = tabelaPessoas.getValueAt(selectedRow, 3);
         numeroCtpsField.setText(ctpsValue != null ? ctpsValue.toString() : "");
-        dataNascimentoField.setText(tabelaPessoas.getValueAt(selectedRow, 4).toString());
-        tipoPessoaComboBox.setSelectedItem(TipoPessoa.valueOf(tabelaPessoas.getValueAt(selectedRow, 5).toString()));
+
+        Object dataNascimentoValue = tabelaPessoas.getValueAt(selectedRow, 4);
+        dataNascimentoField.setText(dataNascimentoValue != null ? dataNascimentoValue.toString() : "");
+
+        Object tipoPessoaValue = tabelaPessoas.getValueAt(selectedRow, 5);
+        if (tipoPessoaValue instanceof TipoPessoa) {
+            tipoPessoaComboBox.setSelectedItem(tipoPessoaValue);
+        } else if (tipoPessoaValue != null) {
+            tipoPessoaComboBox.setSelectedItem(TipoPessoa.valueOf(tipoPessoaValue.toString()));
+        }
 
         JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }

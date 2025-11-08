@@ -3,7 +3,6 @@ package br.com.ui.view;
 import br.com.api.dto.BombaDTO;
 import br.com.api.dto.ProdutoDTO;
 import br.com.common.service.ApiServiceException;
-import br.com.service.BombaService;
 import br.com.service.ProdutoService;
 import br.com.ui.util.ColorPalette;
 
@@ -12,6 +11,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -23,13 +23,17 @@ public class AbastecimentoDialog extends JDialog {
     private JTextField litrosTextField;
     private JTextField reaisTextField;
     private ProdutoService produtoService;
-    private BombaService bombaService;
     private List<ProdutoDTO> produtos;
+
+    // Campos para guardar o resultado
+    private ProdutoDTO produtoSelecionado;
+    private double litrosAbastecidos;
+    private double reaisAbastecidos;
+    private boolean confirmado = false;
 
     public AbastecimentoDialog(Frame owner, BombaDTO bomba) {
         super(owner, "Abastecer Bomba " + bomba.getNome(), true);
         this.produtoService = new ProdutoService();
-        this.bombaService = new BombaService();
 
         setSize(400, 300);
         setLocationRelativeTo(owner);
@@ -76,38 +80,36 @@ public class AbastecimentoDialog extends JDialog {
         });
 
         okButton.addActionListener(e -> {
-            String combustivelSelecionado = (String) combustivelComboBox.getSelectedItem();
+            String itemSelecionado = (String) combustivelComboBox.getSelectedItem();
+            if (itemSelecionado == null) return;
+
+            String nomeCombustivel = itemSelecionado.split(" - ")[0];
+
             Optional<ProdutoDTO> produtoOpt = produtos.stream()
-                    .filter(p -> p.getNome().equals(combustivelSelecionado))
+                    .filter(p -> p.getNome().equals(nomeCombustivel))
                     .findFirst();
 
             if (produtoOpt.isPresent()) {
-                ProdutoDTO produto = produtoOpt.get();
-                double precoUnitario = produto.getPrecos().get(0).getValor().doubleValue(); // Assumindo que o preço está na primeira posição
-
-                double litros = 0;
-                double reais = 0;
+                produtoSelecionado = produtoOpt.get();
+                double precoUnitario = produtoSelecionado.getPrecos().get(0).getValor().doubleValue();
 
                 try {
                     if (!litrosTextField.getText().isEmpty()) {
-                        litros = Double.parseDouble(litrosTextField.getText());
-                        reais = litros * precoUnitario;
+                        litrosAbastecidos = Double.parseDouble(litrosTextField.getText());
+                        reaisAbastecidos = litrosAbastecidos * precoUnitario;
                     } else if (!reaisTextField.getText().isEmpty()) {
-                        reais = Double.parseDouble(reaisTextField.getText());
-                        litros = reais / precoUnitario;
+                        reaisAbastecidos = Double.parseDouble(reaisTextField.getText());
+                        litrosAbastecidos = reaisAbastecidos / precoUnitario;
                     } else {
                         JOptionPane.showMessageDialog(this, "Preencha litros ou reais.", "Erro", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
-                    bombaService.atualizarStatus(bomba.getId(), "ATIVA");
-                    dispose();
-                    new AnimacaoAbastecimentoDialog((Frame) getOwner(), bomba, produto, litros, reais).setVisible(true);
+                    confirmado = true;
+                    dispose(); // Apenas fecha o diálogo
 
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(this, "Valores inválidos.", "Erro", JOptionPane.ERROR_MESSAGE);
-                } catch (IOException | ApiServiceException ex) {
-                    JOptionPane.showMessageDialog(this, "Erro ao se comunicar com a API: " + ex.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -124,12 +126,14 @@ public class AbastecimentoDialog extends JDialog {
             protected void done() {
                 try {
                     produtos = get();
-                    List<String> combustiveis = produtos.stream()
-                            .filter(p -> p.getTipoProduto().equals("COMBUSTIVEL"))
-                            .map(ProdutoDTO::getNome)
+                    NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+
+                    List<String> combustiveisFormatados = produtos.stream()
+                            .filter(p -> p.getTipoProduto().equals("COMBUSTIVEL") && p.getPrecos() != null && !p.getPrecos().isEmpty())
+                            .map(p -> String.format("%s - %s", p.getNome(), currencyFormat.format(p.getPrecos().get(0).getValor())))
                             .collect(Collectors.toList());
 
-                    for (String combustivel : combustiveis) {
+                    for (String combustivel : combustiveisFormatados) {
                         combustivelComboBox.addItem(combustivel);
                     }
                 } catch (InterruptedException | ExecutionException e) {
@@ -144,5 +148,22 @@ public class AbastecimentoDialog extends JDialog {
             }
         };
         worker.execute();
+    }
+
+    // --- Métodos públicos para obter o resultado ---
+    public boolean isConfirmado() {
+        return confirmado;
+    }
+
+    public ProdutoDTO getProdutoSelecionado() {
+        return produtoSelecionado;
+    }
+
+    public double getLitrosAbastecidos() {
+        return litrosAbastecidos;
+    }
+
+    public double getReaisAbastecidos() {
+        return reaisAbastecidos;
     }
 }
