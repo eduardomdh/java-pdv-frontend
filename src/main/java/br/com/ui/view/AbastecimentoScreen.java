@@ -3,7 +3,9 @@ package br.com.ui.view;
 import br.com.api.dto.BombaDTO;
 import br.com.api.dto.ProdutoDTO;
 import br.com.common.service.ApiServiceException;
+import br.com.pessoa.dto.PessoaResponse;
 import br.com.service.BombaService;
+import br.com.service.PdfService;
 import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -20,10 +22,12 @@ public class AbastecimentoScreen extends JFrame {
     private String loggedInUsername;
     private JPanel pumpsPanel;
     private BombaService bombaService;
+    private PdfService pdfService;
 
     public AbastecimentoScreen(String username) {
         this.loggedInUsername = username;
         this.bombaService = new BombaService();
+        this.pdfService = new PdfService();
         setTitle("Central de Abastecimento - PDV Posto de Combustível");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -220,6 +224,31 @@ public class AbastecimentoScreen extends JFrame {
 
                 // 4. Após a animação, recarrega a tela de novo para mostrar o status CONCLUIDA
                 carregarBombas();
+
+                // 5. Pergunta sobre o cupom fiscal
+                int resposta = JOptionPane.showConfirmDialog(this,
+                        "Deseja imprimir o cupom fiscal (NFC-e)?",
+                        "Impressão de Cupom",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
+                if (resposta == JOptionPane.YES_OPTION) {
+                    SelecaoClienteScreen clienteScreen = new SelecaoClienteScreen(this);
+                    clienteScreen.setVisible(true);
+
+                    PessoaResponse clienteSelecionado = clienteScreen.getClienteSelecionado();
+                    boolean consumidorNaoIdentificado = clienteScreen.isConsumidorNaoIdentificado();
+
+                    if (clienteSelecionado != null || consumidorNaoIdentificado) {
+                        try {
+                            pdfService.gerarDanfeNfce(loggedInUsername, bomba, produto, litros, reais, clienteSelecionado);
+                            JOptionPane.showMessageDialog(this, "PDF da NFC-e gerado e aberto com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                        } catch (IOException ex) {
+                            JOptionPane.showMessageDialog(this, "Erro ao gerar ou abrir o PDF: " + ex.getMessage(), "Erro de PDF", JOptionPane.ERROR_MESSAGE);
+                            ex.printStackTrace();
+                        }
+                    }
+                }
 
             } catch (IOException | ApiServiceException e) {
                 JOptionPane.showMessageDialog(this, "Erro ao iniciar abastecimento: " + e.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
