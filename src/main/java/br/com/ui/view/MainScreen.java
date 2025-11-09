@@ -14,15 +14,14 @@ public class MainScreen extends JFrame {
     public MainScreen(String username) {
         this.loggedInUsername = username;
         setTitle("Painel Principal - PDV Posto de Combustível");
-        setSize(1000, 700); // Aumentar um pouco a largura para o menu lateral
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
-        contentPane.setLayout(new BorderLayout(10, 10)); // Espaçamento entre as áreas
+        contentPane.setLayout(new BorderLayout(10, 10));
 
-        // --- Painel do Cabeçalho (NORTH) ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(ColorPalette.PRIMARY);
         headerPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
@@ -52,14 +51,12 @@ public class MainScreen extends JFrame {
 
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
-        // --- Painel de Navegação Lateral (WEST) ---
         JPanel navPanel = new JPanel();
-        navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS)); // Botões verticais
+        navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
         navPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
-        navPanel.setBorder(new EmptyBorder(20, 10, 20, 10)); // Padding interno
-        navPanel.setPreferredSize(new Dimension(250, getHeight())); // Largura fixa para o menu
+        navPanel.setBorder(new EmptyBorder(20, 10, 20, 10));
+        navPanel.setPreferredSize(new Dimension(250, getHeight()));
 
-        // Botões de Navegação
         JButton productButton = createNavButton("Produtos");
         JButton customerButton = createNavButton("Clientes");
         JButton stockButton = createNavButton("Estoque");
@@ -69,7 +66,7 @@ public class MainScreen extends JFrame {
         JButton accessButton = createNavButton("Acesso");
 
         navPanel.add(productButton);
-        navPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Espaçamento entre botões
+        navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         navPanel.add(customerButton);
         navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         navPanel.add(stockButton);
@@ -81,11 +78,10 @@ public class MainScreen extends JFrame {
         navPanel.add(priceButton);
         navPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         navPanel.add(accessButton);
-        navPanel.add(Box.createVerticalGlue()); // Empurra os botões para cima
+        navPanel.add(Box.createVerticalGlue());
 
         contentPane.add(navPanel, BorderLayout.WEST);
 
-        // --- Painel de Conteúdo Principal (CENTER) ---
         JPanel mainContentPanel = new JPanel(new BorderLayout());
         mainContentPanel.setBackground(ColorPalette.BACKGROUND);
         mainContentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
@@ -95,7 +91,6 @@ public class MainScreen extends JFrame {
         mainContentPanel.add(welcomeLabel, BorderLayout.CENTER);
         contentPane.add(mainContentPanel, BorderLayout.CENTER);
 
-        // --- Ações dos Botões ---
         productButton.addActionListener(e -> new ProdutoScreen().setVisible(true));
         customerButton.addActionListener(e -> new PessoaScreen().setVisible(true));
         stockButton.addActionListener(e -> new EstoqueScreen().setVisible(true));
@@ -105,24 +100,23 @@ public class MainScreen extends JFrame {
         accessButton.addActionListener(e -> new GerenciamentoAcessoScreen().setVisible(true));
     }
 
-    // Método para criar botões de navegação com estilo minimalista
     private JButton createNavButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 16));
-        button.setAlignmentX(Component.LEFT_ALIGNMENT); // Alinha o texto à esquerda
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50)); // Altura fixa, largura expansível
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(ColorPalette.PANEL_BACKGROUND); // Fundo sutil
-        button.setForeground(ColorPalette.TEXT); // Cor do texto
-        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15)); // Padding interno
-        button.setHorizontalAlignment(SwingConstants.LEFT); // Alinha o texto à esquerda
+        button.setBackground(ColorPalette.PANEL_BACKGROUND);
+        button.setForeground(ColorPalette.TEXT);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        button.setHorizontalAlignment(SwingConstants.LEFT);
         return button;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new MainScreen("Admin").setVisible(true);
         });
     }

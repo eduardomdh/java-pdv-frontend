@@ -22,12 +22,8 @@ public class AuthService {
 
         if (response != null && response.token() != null) {
             SessionManager.getInstance().setToken(response.token());
-            return response; // Retorna a resposta completa
+            return response;
         } else {
-            System.out.println("DEBUG: LoginResponse recebido: " + response);
-            if (response != null) {
-                System.out.println("DEBUG: Token dentro de LoginResponse: " + response.token());
-            }
             throw new ApiServiceException("Token não recebido na resposta de login.");
         }
     }

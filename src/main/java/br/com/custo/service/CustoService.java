@@ -2,7 +2,7 @@ package br.com.custo.service;
 
 import br.com.common.http.ApiClient;
 import br.com.common.service.ApiServiceException;
-import br.com.custo.dto.CustoListResponse; // Importar a nova classe
+import br.com.custo.dto.CustoListResponse;
 import br.com.custo.dto.CustoRequest;
 import br.com.custo.dto.CustoResponse;
 import com.google.gson.reflect.TypeToken;
@@ -20,9 +20,8 @@ public class CustoService {
     }
 
     public List<CustoResponse> findCustos() throws IOException, ApiServiceException {
-        // Mudar para esperar CustoListResponse
         CustoListResponse custoListResponse = apiClient.get("/custos", CustoListResponse.class);
-        return custoListResponse.getCustos(); // Extrair a lista de custos
+        return custoListResponse.getCustos();
     }
 
     public CustoResponse createCusto(CustoRequest custoRequest) throws IOException, ApiServiceException {

@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PdfService {
 
-    private static final AtomicLong nfcCounter = new AtomicLong(1); // Simula um contador crescente
+    private static final AtomicLong nfcCounter = new AtomicLong(1);
 
     public void gerarDanfeNfce(
             String operador,
@@ -41,28 +41,24 @@ public class PdfService {
             document.addPage(page);
 
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                // Título
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
                 contentStream.newLineAtOffset(50, 750);
                 contentStream.showText("DANFE-NFC-e - Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica");
                 contentStream.endText();
 
-                // Informações da Empresa
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 12);
                 contentStream.newLineAtOffset(50, 720);
                 contentStream.showText("PDV Posto de Combustivel");
                 contentStream.endText();
 
-                // Linha Separadora
                 contentStream.setStrokingColor(Color.BLACK);
                 contentStream.setLineWidth(1);
                 contentStream.moveTo(50, 710);
                 contentStream.lineTo(550, 710);
                 contentStream.stroke();
 
-                // Detalhes da NFC-e
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 10);
                 contentStream.newLineAtOffset(50, 690);
@@ -75,12 +71,10 @@ public class PdfService {
                 contentStream.showText("PDV/Caixa: 01 - Operador: " + operador);
                 contentStream.endText();
 
-                // Linha Separadora
                 contentStream.moveTo(50, 640);
                 contentStream.lineTo(550, 640);
                 contentStream.stroke();
 
-                // Detalhes do Produto
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
                 contentStream.newLineAtOffset(50, 620);
@@ -101,12 +95,10 @@ public class PdfService {
                 contentStream.showText("Bomba: " + bomba.getNome());
                 contentStream.endText();
 
-                // Linha Separadora
                 contentStream.moveTo(50, 530);
                 contentStream.lineTo(550, 530);
                 contentStream.stroke();
 
-                // Forma de Pagamento
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
                 contentStream.newLineAtOffset(50, 510);
@@ -119,12 +111,10 @@ public class PdfService {
                 contentStream.showText(formaPagamento);
                 contentStream.endText();
 
-                // Linha Separadora
                 contentStream.moveTo(50, 470);
                 contentStream.lineTo(550, 470);
                 contentStream.stroke();
 
-                // Informações do Consumidor
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
                 contentStream.newLineAtOffset(50, 450);

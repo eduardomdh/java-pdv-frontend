@@ -2,7 +2,7 @@ package br.com.produto.service;
 
 import br.com.common.http.ApiClient;
 import br.com.common.service.ApiServiceException;
-import br.com.produto.dto.ProdutoListResponse; // Importar a nova classe
+import br.com.produto.dto.ProdutoListResponse;
 import br.com.produto.dto.ProdutoRequest;
 import br.com.produto.dto.ProdutoResponse;
 import com.google.gson.reflect.TypeToken;
@@ -20,9 +20,8 @@ public class ProdutoService {
     }
 
     public List<ProdutoResponse> findProducts() throws IOException, ApiServiceException {
-        // Mudar para esperar ProdutoListResponse
         ProdutoListResponse produtoListResponse = apiClient.get("/produtos", ProdutoListResponse.class);
-        return produtoListResponse.getProdutos(); // Extrair a lista de produtos
+        return produtoListResponse.getProdutos();
     }
 
     public ProdutoResponse createProduct(ProdutoRequest productRequest) throws IOException, ApiServiceException {

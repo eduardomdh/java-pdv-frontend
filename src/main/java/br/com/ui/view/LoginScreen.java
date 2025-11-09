@@ -4,11 +4,11 @@ import br.com.auth.dto.LoginResponse;
 import br.com.auth.service.AuthService;
 import br.com.common.service.ApiServiceException;
 import br.com.ui.util.ColorPalette;
-import br.com.acesso.enums.TipoAcesso; // Importar TipoAcesso
+import br.com.acesso.enums.TipoAcesso;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import java.awt.*; // Adicionado novamente
+import java.awt.*;
 
 public class LoginScreen extends JFrame {
 
@@ -34,7 +34,6 @@ public class LoginScreen extends JFrame {
         formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Username
         JPanel usernamePanel = new JPanel(new BorderLayout());
         usernamePanel.setOpaque(false);
         usernamePanel.add(createStyledLabel("Usuário:"), BorderLayout.NORTH);
@@ -42,7 +41,6 @@ public class LoginScreen extends JFrame {
         usernamePanel.add(usernameField, BorderLayout.CENTER);
         formPanel.add(usernamePanel);
 
-        // Password
         JPanel passwordPanel = new JPanel(new BorderLayout());
         passwordPanel.setOpaque(false);
         passwordPanel.add(createStyledLabel("Senha:"), BorderLayout.NORTH);
@@ -50,7 +48,6 @@ public class LoginScreen extends JFrame {
         passwordPanel.add(passwordField, BorderLayout.CENTER);
         formPanel.add(passwordPanel);
 
-        // Login Button
         loginButton = createStyledButton("Entrar");
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonWrapper.setOpaque(false);
@@ -59,7 +56,6 @@ public class LoginScreen extends JFrame {
 
         contentPane.add(formPanel, new GridBagConstraints());
 
-        // Adicionar listener ao botão de login
         loginButton.addActionListener(e -> authenticateUser());
     }
 
@@ -70,7 +66,7 @@ public class LoginScreen extends JFrame {
         try {
             LoginResponse loginResponse = authService.login(username, password);
 
-            this.dispose(); // Fecha a tela de login
+            this.dispose();
 
             if (loginResponse.tipoAcesso() == TipoAcesso.ADMINISTRADOR || loginResponse.tipoAcesso() == TipoAcesso.GERENCIA) {
                 new MainScreen(username).setVisible(true);
@@ -89,7 +85,6 @@ public class LoginScreen extends JFrame {
         }
     }
 
-    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos...
     private JLabel createStyledLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(ColorPalette.TEXT);
@@ -137,7 +132,7 @@ public class LoginScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new LoginScreen().setVisible(true);
         });
     }

@@ -5,7 +5,7 @@ import java.util.List;
 
 public class PessoaListResponse {
 
-    @SerializedName("content") // Mapeia a chave 'content' do JSON para o campo 'pessoas'
+    @SerializedName("content")
     private List<PessoaResponse> pessoas;
 
     public List<PessoaResponse> getPessoas() {

@@ -80,7 +80,6 @@ public class ApiClient {
                 throw new ApiServiceException("Erro na API: " + response.code() + " " + response.message() + " - Detalhes: " + errorBody);
             }
             String responseBody = response.body().string();
-            // Handle empty response body for DELETE operations
             if (responseBody.isEmpty() && responseType == Void.class) {
                 return null;
             }
@@ -94,7 +93,6 @@ public class ApiClient {
                 String errorBody = response.body() != null ? response.body().string() : "";
                 throw new ApiServiceException("Erro na API: " + response.code() + " " + response.message() + " - Detalhes: " + errorBody);
             }
-            // No need to read response body for DELETE if not expected
         }
     }
 }

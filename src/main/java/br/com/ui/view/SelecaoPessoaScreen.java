@@ -26,7 +26,6 @@ public class SelecaoPessoaScreen extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(10, 10));
 
-        // --- Tabela ---
         String[] colunas = {"ID", "Nome", "CPF/CNPJ"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
@@ -38,7 +37,6 @@ public class SelecaoPessoaScreen extends JDialog {
         tabelaPessoas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaPessoas);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         selecionarButton = new JButton("Selecionar");
         JButton cancelarButton = new JButton("Cancelar");
@@ -52,7 +50,6 @@ public class SelecaoPessoaScreen extends JDialog {
 
         add(mainPanel);
 
-        // Ações
         selecionarButton.addActionListener(e -> onSelecionar());
         cancelarButton.addActionListener(e -> onCancelar());
 

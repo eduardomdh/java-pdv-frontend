@@ -2,7 +2,7 @@ package br.com.estoque.service;
 
 import br.com.common.http.ApiClient;
 import br.com.common.service.ApiServiceException;
-import br.com.estoque.dto.EstoqueListResponse; // Importar a nova classe
+import br.com.estoque.dto.EstoqueListResponse;
 import br.com.estoque.dto.EstoqueRequest;
 import br.com.estoque.dto.EstoqueResponse;
 import com.google.gson.reflect.TypeToken;
@@ -20,9 +20,8 @@ public class EstoqueService {
     }
 
     public List<EstoqueResponse> findEstoques() throws IOException, ApiServiceException {
-        // Mudar para esperar EstoqueListResponse
         EstoqueListResponse estoqueListResponse = apiClient.get("/estoques", EstoqueListResponse.class);
-        return estoqueListResponse.getEstoques(); // Extrair a lista de estoques
+        return estoqueListResponse.getEstoques();
     }
 
     public EstoqueResponse findEstoqueById(Long id) throws IOException, ApiServiceException {

@@ -31,7 +31,6 @@ public class AnimacaoAbastecimentoDialog extends JDialog {
         setLayout(new GridLayout(3, 1, 10, 10));
         getContentPane().setBackground(ColorPalette.BACKGROUND);
 
-        // --- Componentes ---
         litrosLabel = new JLabel("Litros: 0.00");
         reaisLabel = new JLabel("Reais: R$ 0.00");
         progressBar = new JProgressBar(0, 100);
@@ -40,19 +39,18 @@ public class AnimacaoAbastecimentoDialog extends JDialog {
         add(reaisLabel);
         add(progressBar);
 
-        // --- Animação ---
         new Thread(() -> {
             try {
                 for (int i = 0; i <= 100; i++) {
-                    Thread.sleep(50); // Simula o tempo de abastecimento
+                    Thread.sleep(50);
                     double litrosAtuais = (finalLitros * i) / 100;
                     double reaisAtuais = (finalReais * i) / 100;
-                    final int progressValue = i; // Variável final para a lambda
+                    final int progressValue = i;
 
                     SwingUtilities.invokeLater(() -> {
                         litrosLabel.setText(String.format("Litros: %.2f", litrosAtuais));
                         reaisLabel.setText(String.format("Reais: R$ %.2f", reaisAtuais));
-                        progressBar.setValue(progressValue); // Usa a variável final
+                        progressBar.setValue(progressValue);
                     });
                 }
 

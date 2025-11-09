@@ -27,7 +27,6 @@ public class AbastecimentoDialog extends JDialog {
     private ProdutoService produtoService;
     private List<ProdutoDTO> produtos;
 
-    // Campos para guardar o resultado
     private ProdutoDTO produtoSelecionado;
     private double litrosAbastecidos;
     private double reaisAbastecidos;
@@ -43,7 +42,6 @@ public class AbastecimentoDialog extends JDialog {
         setLayout(new GridLayout(5, 2, 10, 10));
         getContentPane().setBackground(ColorPalette.BACKGROUND);
 
-        // --- Componentes ---
         add(new JLabel("Combustível:"));
         combustivelComboBox = new JComboBox<>();
         add(combustivelComboBox);
@@ -61,13 +59,11 @@ public class AbastecimentoDialog extends JDialog {
         add(pagamentoComboBox);
 
         JButton okButton = new JButton("OK");
-        add(new JLabel()); // Espaço em branco
+        add(new JLabel());
         add(okButton);
 
-        // --- Carregar Combustíveis ---
         carregarCombustiveis();
 
-        // --- Listeners ---
         litrosTextField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -158,7 +154,6 @@ public class AbastecimentoDialog extends JDialog {
         worker.execute();
     }
 
-    // --- Métodos públicos para obter o resultado ---
     public boolean isConfirmado() {
         return confirmado;
     }

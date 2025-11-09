@@ -205,7 +205,6 @@ public class PrecoScreen extends JFrame {
 
         precoIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
         
-        // Carrega os dados do backend para garantir que estão atualizados
         try {
             PrecoResponse precoParaEditar = precoService.findPrecoById(precoIdEmEdicao);
             if (precoParaEditar != null) {

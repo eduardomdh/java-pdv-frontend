@@ -28,7 +28,6 @@ public class SelecaoClienteScreen extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(10, 10));
 
-        // --- Tabela ---
         String[] colunas = {"ID", "Nome", "CPF/CNPJ"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
@@ -40,7 +39,6 @@ public class SelecaoClienteScreen extends JDialog {
         tabelaClientes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaClientes);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         selecionarButton = new JButton("Selecionar Cliente");
         consumidorNaoIdentificadoButton = new JButton("Consumidor Não Identificado");
@@ -56,7 +54,6 @@ public class SelecaoClienteScreen extends JDialog {
 
         add(mainPanel);
 
-        // Ações
         selecionarButton.addActionListener(e -> onSelecionar());
         consumidorNaoIdentificadoButton.addActionListener(e -> onConsumidorNaoIdentificado());
         cancelarButton.addActionListener(e -> onCancelar());

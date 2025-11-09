@@ -39,19 +39,17 @@ public class SelecaoProdutoScreen extends JDialog {
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(10, 10));
 
-        // --- Tabela ---
         String[] colunas = {"ID", "Nome", "Referência", "Preço", "Estoque"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Torna a tabela não editável
+                return false;
             }
         };
         tabelaProdutos = new JTable(tableModel);
         tabelaProdutos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaProdutos);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         selecionarButton = new JButton("Selecionar");
         JButton cancelarButton = new JButton("Cancelar");
@@ -65,7 +63,6 @@ public class SelecaoProdutoScreen extends JDialog {
 
         add(mainPanel);
 
-        // Ações
         selecionarButton.addActionListener(e -> onSelecionar());
         cancelarButton.addActionListener(e -> onCancelar());
 

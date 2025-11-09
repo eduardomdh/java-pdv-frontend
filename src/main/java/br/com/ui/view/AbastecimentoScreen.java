@@ -37,7 +37,6 @@ public class AbastecimentoScreen extends JFrame {
         contentPane.setBackground(ColorPalette.BACKGROUND);
         contentPane.setLayout(new BorderLayout(10, 10));
 
-        // --- Painel Superior (Usuário e Logout) ---
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(ColorPalette.BACKGROUND);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
@@ -57,13 +56,11 @@ public class AbastecimentoScreen extends JFrame {
         logoutButtonPanel.add(logoutButton);
         topPanel.add(logoutButtonPanel, BorderLayout.EAST);
 
-        // --- Título Principal ---
         JLabel mainTitleLabel = new JLabel("Central de Abastecimento", SwingConstants.CENTER);
         mainTitleLabel.setFont(new Font("Arial", Font.BOLD, 32));
         mainTitleLabel.setForeground(ColorPalette.PRIMARY);
         mainTitleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
 
-        // --- Container do Cabeçalho (Título e Painel Superior) ---
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.add(topPanel, BorderLayout.NORTH);
@@ -71,10 +68,9 @@ public class AbastecimentoScreen extends JFrame {
 
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
-        // --- Painel de Bombas (com GridLayout) ---
         pumpsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
         pumpsPanel.setOpaque(false);
-        pumpsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Adiciona margem
+        pumpsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         contentPane.add(pumpsPanel, BorderLayout.CENTER);
 
@@ -164,7 +160,6 @@ public class AbastecimentoScreen extends JFrame {
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         sectionPanel.add(statusLabel);
 
-        // Lógica de interação baseada no status
         if (bomba.getStatus().equals("INATIVA")) {
             sectionPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
             sectionPanel.addMouseListener(new MouseAdapter() {
@@ -210,23 +205,18 @@ public class AbastecimentoScreen extends JFrame {
 
         if (dialog.isConfirmado()) {
             try {
-                // 1. Atualiza o status para ATIVA
                 bombaService.atualizarStatus(bomba.getId(), "ATIVA");
 
-                // 2. Recarrega a tela IMEDIATAMENTE para mostrar a bomba laranja
                 carregarBombas();
 
-                // 3. Abre a animação (que agora é independente)
                 ProdutoDTO produto = dialog.getProdutoSelecionado();
                 double litros = dialog.getLitrosAbastecidos();
                 double reais = dialog.getReaisAbastecidos();
                 String formaPagamento = dialog.getFormaPagamento();
                 new AnimacaoAbastecimentoDialog(this, bomba, produto, litros, reais).setVisible(true);
 
-                // 4. Após a animação, recarrega a tela de novo para mostrar o status CONCLUIDA
                 carregarBombas();
 
-                // 5. Pergunta sobre o cupom fiscal
                 int resposta = JOptionPane.showConfirmDialog(this,
                         "Deseja imprimir o cupom fiscal (NFC-e)?",
                         "Impressão de Cupom",
@@ -271,7 +261,7 @@ public class AbastecimentoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new AbastecimentoScreen("TesteUser").setVisible(true);
         });
     }

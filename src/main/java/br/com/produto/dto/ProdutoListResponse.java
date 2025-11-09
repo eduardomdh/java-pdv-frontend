@@ -5,7 +5,7 @@ import java.util.List;
 
 public class ProdutoListResponse {
 
-    @SerializedName("content") // Mapeia a chave 'content' do JSON para o campo 'produtos'
+    @SerializedName("content")
     private List<ProdutoResponse> produtos;
 
     public List<ProdutoResponse> getProdutos() {

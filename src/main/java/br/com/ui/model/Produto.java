@@ -11,7 +11,6 @@ public class Produto {
     private String categoria;
     private TipoProduto tipoProduto;
 
-    // Construtor vazio para desserialização JSON
     public Produto() {
     }
 
@@ -25,7 +24,6 @@ public class Produto {
         this.tipoProduto = tipoProduto;
     }
 
-    // Getters e Setters
     public Long getId() {
         return id;
     }

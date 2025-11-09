@@ -1,6 +1,6 @@
 package br.com.acesso.service;
 
-import br.com.acesso.dto.AcessoListResponse; // Importar a nova classe
+import br.com.acesso.dto.AcessoListResponse;
 import br.com.acesso.dto.AcessoRequest;
 import br.com.acesso.dto.AcessoResponse;
 import br.com.common.http.ApiClient;
@@ -20,9 +20,8 @@ public class AcessoService {
     }
 
     public List<AcessoResponse> findAcessos() throws IOException, ApiServiceException {
-        // Mudar para esperar AcessoListResponse
         AcessoListResponse acessoListResponse = apiClient.get("/acessos", AcessoListResponse.class);
-        return acessoListResponse.getAcessos(); // Extrair a lista de acessos
+        return acessoListResponse.getAcessos();
     }
 
     public AcessoResponse createAcesso(AcessoRequest acessoRequest) throws IOException, ApiServiceException {
