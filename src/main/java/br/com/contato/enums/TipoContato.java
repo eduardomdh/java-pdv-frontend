@@ -1,7 +1,9 @@
 package br.com.contato.enums;
 
 public enum TipoContato {
-    TELEFONE,
-    CELULAR,
-    EMAIL
+    CLIENTE,
+    FORNECEDOR,
+    FUNCIONARIO;
+
+
 }

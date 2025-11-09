@@ -1,5 +1,6 @@
 package br.com.ui.view;
 
+import br.com.common.service.ApiServiceException;
 import br.com.produto.dto.ProdutoRequest;
 import br.com.produto.dto.ProdutoResponse;
 import br.com.produto.enums.TipoProduto;
@@ -11,6 +12,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
 import java.util.List;
 
 public class ProdutoScreen extends JFrame {
@@ -19,7 +21,7 @@ public class ProdutoScreen extends JFrame {
     private JComboBox<TipoProduto> tipoProdutoComboBox;
     private JTable tabelaProdutos;
     private DefaultTableModel tableModel;
-    private Long produtoIdEmEdicao; // Novo campo para armazenar o ID do produto em edição
+    private Long produtoIdEmEdicao;
 
     private final ProdutoService produtoService;
 
@@ -34,7 +36,6 @@ public class ProdutoScreen extends JFrame {
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
-        // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -66,22 +67,26 @@ public class ProdutoScreen extends JFrame {
         tipoProdutoComboBox = new JComboBox<>(TipoProduto.values());
         fieldsPanel.add(tipoProdutoComboBox);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
-        buttonsPanel.add(editarButton); // Adiciona o botão Editar
+        buttonsPanel.add(editarButton);
         buttonsPanel.add(excluirButton);
 
-        // --- Tabela ---
         String[] colunas = {"ID", "Nome", "Referência", "Fornecedor", "Marca", "Categoria", "Tipo"};
-        tableModel = new DefaultTableModel(colunas, 0);
+        tableModel = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tabelaProdutos = new JTable(tableModel);
+        tabelaProdutos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaProdutos);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
@@ -93,11 +98,10 @@ public class ProdutoScreen extends JFrame {
 
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
-        // --- Ações ---
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarProduto());
         excluirButton.addActionListener(e -> excluirProduto());
-        editarButton.addActionListener(e -> editarProduto()); // Ação para o botão Editar
+        editarButton.addActionListener(e -> editarProduto());
 
         carregarProdutos();
     }
@@ -117,9 +121,10 @@ public class ProdutoScreen extends JFrame {
                         produto.tipoProduto()
                 });
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar os produtos: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente mais tarde.");
         }
     }
 
@@ -134,18 +139,19 @@ public class ProdutoScreen extends JFrame {
         );
 
         try {
-            if (produtoIdEmEdicao == null) { // Se não há ID em edição, é um novo produto
+            if (produtoIdEmEdicao == null) {
                 produtoService.createProduct(request);
                 JOptionPane.showMessageDialog(this, "Produto salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else { // Se há um ID em edição, é uma atualização
+            } else {
                 produtoService.updateProduct(produtoIdEmEdicao, request);
                 JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
-            carregarProdutos(); // Recarrega a lista da API
+            carregarProdutos();
             limparCampos();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar produto: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível salvar o produto: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o produto. Verifique sua conexão.");
         }
     }
 
@@ -156,13 +162,13 @@ public class ProdutoScreen extends JFrame {
             return;
         }
 
-        produtoIdEmEdicao = (Long) tabelaProdutos.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
+        produtoIdEmEdicao = (Long) tabelaProdutos.getValueAt(selectedRow, 0);
         nomeField.setText((String) tabelaProdutos.getValueAt(selectedRow, 1));
         referenciaField.setText((String) tabelaProdutos.getValueAt(selectedRow, 2));
         fornecedorField.setText((String) tabelaProdutos.getValueAt(selectedRow, 3));
         marcaField.setText((String) tabelaProdutos.getValueAt(selectedRow, 4));
         categoriaField.setText((String) tabelaProdutos.getValueAt(selectedRow, 5));
-        tipoProdutoComboBox.setSelectedItem(TipoProduto.valueOf(tabelaProdutos.getValueAt(selectedRow, 6).toString())); // Converte String para TipoProduto
+        tipoProdutoComboBox.setSelectedItem(tabelaProdutos.getValueAt(selectedRow, 6));
 
         JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -174,18 +180,19 @@ public class ProdutoScreen extends JFrame {
             return;
         }
 
-        Long id = (Long) tabelaProdutos.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+        Long id = (Long) tabelaProdutos.getValueAt(selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o produto selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 produtoService.deleteProduct(id);
                 JOptionPane.showMessageDialog(this, "Produto excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarProdutos(); // Recarrega a lista da API
+                carregarProdutos();
                 limparCampos();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir produto: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+            } catch (ApiServiceException e) {
+                showErrorDialog("Erro de API", "Não foi possível excluir o produto: " + e.getMessage());
+            } catch (IOException e) {
+                showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para excluir o produto. Verifique sua conexão.");
             }
         }
     }
@@ -198,10 +205,13 @@ public class ProdutoScreen extends JFrame {
         categoriaField.setText("");
         tipoProdutoComboBox.setSelectedIndex(0);
         tabelaProdutos.clearSelection();
-        produtoIdEmEdicao = null; // Limpa o ID em edição
+        produtoIdEmEdicao = null;
     }
 
-    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
+    private void showErrorDialog(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -235,7 +245,7 @@ public class ProdutoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new ProdutoScreen().setVisible(true);
         });
     }

@@ -1,5 +1,6 @@
 package br.com.ui.view;
 
+import br.com.common.service.ApiServiceException;
 import br.com.pessoa.dto.PessoaRequest;
 import br.com.pessoa.dto.PessoaResponse;
 import br.com.pessoa.enums.TipoPessoa;
@@ -11,7 +12,9 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -21,9 +24,10 @@ public class PessoaScreen extends JFrame {
     private JComboBox<TipoPessoa> tipoPessoaComboBox;
     private JTable tabelaPessoas;
     private DefaultTableModel tableModel;
-    private Long pessoaIdEmEdicao; // Novo campo para armazenar o ID da pessoa em edição
+    private Long pessoaIdEmEdicao;
 
     private final PessoaService pessoaService;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public PessoaScreen() {
         this.pessoaService = new PessoaService();
@@ -36,7 +40,6 @@ public class PessoaScreen extends JFrame {
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
-        // --- Painel de Campos ---
         JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -56,7 +59,7 @@ public class PessoaScreen extends JFrame {
         numeroCtpsField = createStyledTextField();
         fieldsPanel.add(numeroCtpsField);
 
-        fieldsPanel.add(createStyledLabel("Data Nascimento (yyyy-mm-dd):", ColorPalette.TEXT));
+        fieldsPanel.add(createStyledLabel("Data Nascimento (dd/MM/yyyy):", ColorPalette.TEXT));
         dataNascimentoField = createStyledTextField();
         fieldsPanel.add(dataNascimentoField);
 
@@ -64,22 +67,26 @@ public class PessoaScreen extends JFrame {
         tipoPessoaComboBox = new JComboBox<>(TipoPessoa.values());
         fieldsPanel.add(tipoPessoaComboBox);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
-        buttonsPanel.add(editarButton); // Adiciona o botão Editar
+        buttonsPanel.add(editarButton);
         buttonsPanel.add(excluirButton);
 
-        // --- Tabela ---
         String[] colunas = {"ID", "Nome", "CPF/CNPJ", "Nº CTPS", "Nascimento", "Tipo"};
-        tableModel = new DefaultTableModel(colunas, 0);
+        tableModel = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tabelaPessoas = new JTable(tableModel);
+        tabelaPessoas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaPessoas);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
@@ -91,11 +98,10 @@ public class PessoaScreen extends JFrame {
 
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
-        // Ações
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarPessoa());
         excluirButton.addActionListener(e -> excluirPessoa());
-        editarButton.addActionListener(e -> editarPessoa()); // Ação para o botão Editar
+        editarButton.addActionListener(e -> editarPessoa());
 
         carregarPessoas();
     }
@@ -110,19 +116,20 @@ public class PessoaScreen extends JFrame {
                         pessoa.nomeCompleto(),
                         pessoa.cpfCnpj(),
                         pessoa.numeroCtps(),
-                        pessoa.dataNascimento(),
+                        pessoa.dataNascimento() != null ? pessoa.dataNascimento().format(dateFormatter) : "",
                         pessoa.tipoPessoa()
                 });
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar pessoas: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar as pessoas: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor. Verifique sua conexão ou tente novamente mais tarde.");
         }
     }
 
     private void salvarPessoa() {
         try {
-            LocalDate dataNascimento = dataNascimentoField.getText().isEmpty() ? null : LocalDate.parse(dataNascimentoField.getText());
+            LocalDate dataNascimento = dataNascimentoField.getText().isEmpty() ? null : LocalDate.parse(dataNascimentoField.getText(), dateFormatter);
             Long numeroCtps = numeroCtpsField.getText().isEmpty() ? null : Long.parseLong(numeroCtpsField.getText());
 
             PessoaRequest request = new PessoaRequest(
@@ -133,10 +140,10 @@ public class PessoaScreen extends JFrame {
                     (TipoPessoa) tipoPessoaComboBox.getSelectedItem()
             );
 
-            if (pessoaIdEmEdicao == null) { // Se não há ID em edição, é uma nova pessoa
+            if (pessoaIdEmEdicao == null) {
                 pessoaService.createPessoa(request);
                 JOptionPane.showMessageDialog(this, "Pessoa salva com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else { // Se há um ID em edição, é uma atualização
+            } else {
                 pessoaService.updatePessoa(pessoaIdEmEdicao, request);
                 JOptionPane.showMessageDialog(this, "Pessoa atualizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -144,12 +151,13 @@ public class PessoaScreen extends JFrame {
             limparCampos();
 
         } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Formato de data inválido. Use yyyy-mm-dd.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+            showErrorDialog("Erro de Formato", "Formato de data inválido. Use dd/MM/yyyy.");
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Número de CTPS inválido.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar pessoa: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            showErrorDialog("Erro de Formato", "Número de CTPS inválido. Deve conter apenas números.");
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível salvar a pessoa: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar a pessoa. Verifique sua conexão.");
         }
     }
 
@@ -187,18 +195,19 @@ public class PessoaScreen extends JFrame {
             return;
         }
 
-        Long id = (Long) tabelaPessoas.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+        Long id = (Long) tabelaPessoas.getValueAt(selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir a pessoa selecionada?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 pessoaService.deletePessoa(id);
                 JOptionPane.showMessageDialog(this, "Pessoa excluída com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarPessoas(); // Recarrega a lista da API
+                carregarPessoas();
                 limparCampos();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir pessoa: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+            } catch (ApiServiceException e) {
+                showErrorDialog("Erro de API", "Não foi possível excluir a pessoa: " + e.getMessage());
+            } catch (IOException e) {
+                showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para excluir a pessoa. Verifique sua conexão.");
             }
         }
     }
@@ -210,10 +219,13 @@ public class PessoaScreen extends JFrame {
         dataNascimentoField.setText("");
         tipoPessoaComboBox.setSelectedIndex(0);
         tabelaPessoas.clearSelection();
-        pessoaIdEmEdicao = null; // Limpa o ID em edição
+        pessoaIdEmEdicao = null;
     }
 
-    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
+    private void showErrorDialog(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -247,7 +259,7 @@ public class PessoaScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new PessoaScreen().setVisible(true);
         });
     }

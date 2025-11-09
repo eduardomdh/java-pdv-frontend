@@ -6,5 +6,6 @@ public record ContatoRequest(
     String telefone,
     String email,
     String endereco,
-    TipoContato tipoContato
+    TipoContato tipoContato,
+    Long pessoaId
 ) {}

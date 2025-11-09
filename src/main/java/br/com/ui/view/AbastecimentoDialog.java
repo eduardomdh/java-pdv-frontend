@@ -13,6 +13,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -101,10 +102,10 @@ public class AbastecimentoDialog extends JDialog {
 
                 try {
                     if (!litrosTextField.getText().isEmpty()) {
-                        litrosAbastecidos = Double.parseDouble(litrosTextField.getText());
+                        litrosAbastecidos = Double.parseDouble(litrosTextField.getText().replace(",", "."));
                         reaisAbastecidos = litrosAbastecidos * precoUnitario;
                     } else if (!reaisTextField.getText().isEmpty()) {
-                        reaisAbastecidos = Double.parseDouble(reaisTextField.getText());
+                        reaisAbastecidos = Double.parseDouble(reaisTextField.getText().replace(",", "."));
                         litrosAbastecidos = reaisAbastecidos / precoUnitario;
                     } else {
                         JOptionPane.showMessageDialog(this, "Preencha litros ou reais.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -116,7 +117,7 @@ public class AbastecimentoDialog extends JDialog {
                     dispose();
 
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Valores inválidos.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Valor inválido. Use vírgula (,) como separador decimal.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -133,7 +134,7 @@ public class AbastecimentoDialog extends JDialog {
             protected void done() {
                 try {
                     produtos = get();
-                    NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+                    NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
                     List<String> combustiveisFormatados = produtos.stream()
                             .filter(p -> p.getTipoProduto().equals("COMBUSTIVEL") && p.getPrecos() != null && !p.getPrecos().isEmpty())

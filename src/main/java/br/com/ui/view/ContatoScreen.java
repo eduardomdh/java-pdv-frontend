@@ -1,9 +1,12 @@
 package br.com.ui.view;
 
+import br.com.common.service.ApiServiceException;
 import br.com.contato.dto.ContatoRequest;
 import br.com.contato.dto.ContatoResponse;
 import br.com.contato.enums.TipoContato;
 import br.com.contato.service.ContatoService;
+import br.com.pessoa.dto.PessoaResponse;
+import br.com.pessoa.service.PessoaService;
 import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
@@ -11,20 +14,30 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ContatoScreen extends JFrame {
 
     private JTextField telefoneField, emailField, enderecoField;
     private JComboBox<TipoContato> tipoContatoComboBox;
+    private JTextField pessoaField;
+    private JButton selecionarPessoaButton;
+    private PessoaResponse pessoaSelecionada;
     private JTable tabelaContatos;
     private DefaultTableModel tableModel;
-    private Long contatoIdEmEdicao; // Novo campo para armazenar o ID do contato em edição
+    private Long contatoIdEmEdicao;
 
     private final ContatoService contatoService;
+    private final PessoaService pessoaService;
+    private Map<Long, PessoaResponse> pessoasMap;
 
     public ContatoScreen() {
         this.contatoService = new ContatoService();
+        this.pessoaService = new PessoaService();
+        this.pessoasMap = new HashMap<>();
 
         setTitle("Gerenciamento de Contatos");
         setSize(800, 600);
@@ -34,13 +47,21 @@ public class ContatoScreen extends JFrame {
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
 
-        // --- Painel de Campos ---
-        JPanel fieldsPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
         fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
         fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(null, "Dados do Contato", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
+
+        fieldsPanel.add(createStyledLabel("Pessoa:", ColorPalette.TEXT));
+        JPanel pessoaPanel = new JPanel(new BorderLayout());
+        pessoaField = createStyledTextField();
+        pessoaField.setEditable(false);
+        selecionarPessoaButton = new JButton("Selecionar");
+        pessoaPanel.add(pessoaField, BorderLayout.CENTER);
+        pessoaPanel.add(selecionarPessoaButton, BorderLayout.EAST);
+        fieldsPanel.add(pessoaPanel);
 
         fieldsPanel.add(createStyledLabel("Telefone:", ColorPalette.TEXT));
         telefoneField = createStyledTextField();
@@ -58,22 +79,26 @@ public class ContatoScreen extends JFrame {
         tipoContatoComboBox = new JComboBox<>(TipoContato.values());
         fieldsPanel.add(tipoContatoComboBox);
 
-        // --- Painel de Botões ---
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonsPanel.setOpaque(false);
         JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT); // Novo botão Editar
+        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
         buttonsPanel.add(novoButton);
         buttonsPanel.add(salvarButton);
-        buttonsPanel.add(editarButton); // Adiciona o botão Editar
+        buttonsPanel.add(editarButton);
         buttonsPanel.add(excluirButton);
 
-        // --- Tabela ---
-        String[] colunas = {"ID", "Telefone", "Email", "Endereço", "Tipo"};
-        tableModel = new DefaultTableModel(colunas, 0);
+        String[] colunas = {"ID", "Pessoa", "Telefone", "Email", "Endereço", "Tipo"};
+        tableModel = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tabelaContatos = new JTable(tableModel);
+        tabelaContatos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaContatos);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
@@ -85,13 +110,38 @@ public class ContatoScreen extends JFrame {
 
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
-        // Ações
+        selecionarPessoaButton.addActionListener(e -> abrirSelecaoPessoa());
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarContato());
         excluirButton.addActionListener(e -> excluirContato());
-        editarButton.addActionListener(e -> editarContato()); // Ação para o botão Editar
+        editarButton.addActionListener(e -> editarContato());
 
+        carregarMapaPessoas();
         carregarContatos();
+    }
+
+    private void abrirSelecaoPessoa() {
+        SelecaoPessoaScreen selecaoPessoaScreen = new SelecaoPessoaScreen(this);
+        selecaoPessoaScreen.setVisible(true);
+        PessoaResponse pessoa = selecaoPessoaScreen.getPessoaSelecionada();
+        if (pessoa != null) {
+            this.pessoaSelecionada = pessoa;
+            pessoaField.setText(pessoa.nomeCompleto());
+        }
+    }
+
+    private void carregarMapaPessoas() {
+        try {
+            List<PessoaResponse> pessoas = pessoaService.findPessoas();
+            pessoasMap.clear();
+            for (PessoaResponse pessoa : pessoas) {
+                pessoasMap.put(pessoa.id(), pessoa);
+            }
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar os dados das pessoas: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar as pessoas. Verifique sua conexão.");
+        }
     }
 
     private void carregarContatos() {
@@ -99,42 +149,53 @@ public class ContatoScreen extends JFrame {
         try {
             List<ContatoResponse> contatos = contatoService.findContatos();
             for (ContatoResponse contato : contatos) {
+                PessoaResponse pessoaAssociada = pessoasMap.get(contato.pessoaId());
+                String nomePessoa = (pessoaAssociada != null) ? pessoaAssociada.nomeCompleto() : "Pessoa Desconhecida";
                 tableModel.addRow(new Object[]{
                         contato.id(),
+                        nomePessoa,
                         contato.telefone(),
                         contato.email(),
                         contato.endereco(),
                         contato.tipoContato()
                 });
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar contatos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar os contatos: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os contatos. Verifique sua conexão.");
         }
     }
 
     private void salvarContato() {
         try {
+            if (pessoaSelecionada == null) {
+                showErrorDialog("Validação", "É necessário selecionar uma pessoa.");
+                return;
+            }
+
             ContatoRequest request = new ContatoRequest(
                     telefoneField.getText(),
                     emailField.getText(),
                     enderecoField.getText(),
-                    (TipoContato) tipoContatoComboBox.getSelectedItem()
+                    (TipoContato) tipoContatoComboBox.getSelectedItem(),
+                    pessoaSelecionada.id()
             );
 
-            if (contatoIdEmEdicao == null) { // Se não há ID em edição, é um novo contato
+            if (contatoIdEmEdicao == null) {
                 contatoService.createContato(request);
                 JOptionPane.showMessageDialog(this, "Contato salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            } else { // Se há um ID em edição, é uma atualização
+            } else {
                 contatoService.updateContato(contatoIdEmEdicao, request);
                 JOptionPane.showMessageDialog(this, "Contato atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
             carregarContatos();
             limparCampos();
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar contato: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível salvar o contato: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o contato. Verifique sua conexão.");
         }
     }
 
@@ -145,13 +206,30 @@ public class ContatoScreen extends JFrame {
             return;
         }
 
-        contatoIdEmEdicao = (Long) tabelaContatos.getValueAt(selectedRow, 0); // Pega o ID da primeira coluna
-        telefoneField.setText(tabelaContatos.getValueAt(selectedRow, 1).toString());
-        emailField.setText(tabelaContatos.getValueAt(selectedRow, 2).toString());
-        enderecoField.setText(tabelaContatos.getValueAt(selectedRow, 3).toString());
-        tipoContatoComboBox.setSelectedItem(TipoContato.valueOf(tabelaContatos.getValueAt(selectedRow, 4).toString()));
+        contatoIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
+        try {
+            ContatoResponse contatoParaEditar = contatoService.findContatoById(contatoIdEmEdicao);
+            if (contatoParaEditar != null) {
+                telefoneField.setText(contatoParaEditar.telefone());
+                emailField.setText(contatoParaEditar.email());
+                enderecoField.setText(contatoParaEditar.endereco());
+                tipoContatoComboBox.setSelectedItem(contatoParaEditar.tipoContato());
 
-        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
+                PessoaResponse pessoaAssociada = pessoasMap.get(contatoParaEditar.pessoaId());
+                if (pessoaAssociada != null) {
+                    this.pessoaSelecionada = pessoaAssociada;
+                    pessoaField.setText(pessoaAssociada.nomeCompleto());
+                } else {
+                    this.pessoaSelecionada = null;
+                    pessoaField.setText("Pessoa não encontrada");
+                }
+                JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar os dados do contato para edição: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os dados do contato. Verifique sua conexão.");
+        }
     }
 
     private void excluirContato() {
@@ -161,18 +239,19 @@ public class ContatoScreen extends JFrame {
             return;
         }
 
-        Long id = (Long) tabelaContatos.getValueAt(selectedRow, 0); // Assumindo que o ID está na primeira coluna
+        Long id = (Long) tabelaContatos.getValueAt(selectedRow, 0);
 
         int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o contato selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 contatoService.deleteContato(id);
                 JOptionPane.showMessageDialog(this, "Contato excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                carregarContatos(); // Recarrega a lista da API
+                carregarContatos();
                 limparCampos();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir contato: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+            } catch (ApiServiceException e) {
+                showErrorDialog("Erro de API", "Não foi possível excluir o contato: " + e.getMessage());
+            } catch (IOException e) {
+                showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para excluir o contato. Verifique sua conexão.");
             }
         }
     }
@@ -182,11 +261,16 @@ public class ContatoScreen extends JFrame {
         emailField.setText("");
         enderecoField.setText("");
         tipoContatoComboBox.setSelectedIndex(0);
+        pessoaField.setText("");
+        pessoaSelecionada = null;
         tabelaContatos.clearSelection();
-        contatoIdEmEdicao = null; // Limpa o ID em edição
+        contatoIdEmEdicao = null;
     }
 
-    // Métodos de estilo (createStyledLabel, etc.) permanecem os mesmos
+    private void showErrorDialog(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+
     private JLabel createStyledLabel(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);
@@ -220,7 +304,7 @@ public class ContatoScreen extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup(); // Inicializa o FlatLaf
+            FlatLightLaf.setup();
             new ContatoScreen().setVisible(true);
         });
     }

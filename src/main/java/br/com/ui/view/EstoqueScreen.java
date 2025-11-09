@@ -1,5 +1,6 @@
 package br.com.ui.view;
 
+import br.com.common.service.ApiServiceException;
 import br.com.estoque.dto.EstoqueRequest;
 import br.com.estoque.dto.EstoqueResponse;
 import br.com.estoque.enums.TipoEstoque;
@@ -13,8 +14,10 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
@@ -24,16 +27,17 @@ public class EstoqueScreen extends JFrame {
 
     private JTextField quantidadeField, localTanqueField, localEnderecoField, loteFabricacaoField, dataValidadeField;
     private JComboBox<TipoEstoque> tipoEstoqueComboBox;
-    private JTextField produtoField; // Alterado de JComboBox para JTextField
+    private JTextField produtoField;
     private JButton selecionarProdutoButton;
-    private ProdutoResponse produtoSelecionado; // Armazena o produto selecionado
+    private ProdutoResponse produtoSelecionado;
     private JTable tabelaEstoque;
     private DefaultTableModel tableModel;
     private Long estoqueIdEmEdicao;
 
     private final EstoqueService estoqueService;
     private final ProdutoService produtoService;
-    private Map<Long, ProdutoResponse> produtosMap; // Mantido para exibição na tabela
+    private Map<Long, ProdutoResponse> produtosMap;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public EstoqueScreen() {
         this.estoqueService = new EstoqueService();
@@ -80,7 +84,7 @@ public class EstoqueScreen extends JFrame {
         loteFabricacaoField = createStyledTextField();
         fieldsPanel.add(loteFabricacaoField);
 
-        fieldsPanel.add(createStyledLabel("Data de Validade (yyyy-mm-dd):", ColorPalette.TEXT));
+        fieldsPanel.add(createStyledLabel("Data de Validade (dd/MM/yyyy):", ColorPalette.TEXT));
         dataValidadeField = createStyledTextField();
         fieldsPanel.add(dataValidadeField);
 
@@ -100,8 +104,14 @@ public class EstoqueScreen extends JFrame {
         buttonsPanel.add(excluirButton);
 
         String[] colunas = {"ID", "Produto", "Quantidade", "Tanque", "Endereço", "Lote", "Validade", "Tipo"};
-        tableModel = new DefaultTableModel(colunas, 0);
+        tableModel = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         tabelaEstoque = new JTable(tableModel);
+        tabelaEstoque.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane tableScrollPane = new JScrollPane(tabelaEstoque);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
@@ -113,14 +123,13 @@ public class EstoqueScreen extends JFrame {
 
         contentPane.add(mainPanel, BorderLayout.CENTER);
 
-        // Ações
         selecionarProdutoButton.addActionListener(e -> abrirSelecaoProduto());
         novoButton.addActionListener(e -> limparCampos());
         salvarButton.addActionListener(e -> salvarEstoque());
         excluirButton.addActionListener(e -> excluirEstoque());
         editarButton.addActionListener(e -> editarEstoque());
 
-        carregarMapaProdutos(); // Carrega o mapa de produtos para exibição na tabela
+        carregarMapaProdutos();
         carregarEstoques();
     }
 
@@ -141,9 +150,10 @@ public class EstoqueScreen extends JFrame {
             for (ProdutoResponse produto : produtos) {
                 produtosMap.put(produto.id(), produto);
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar mapa de produtos: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar os dados dos produtos: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os produtos. Verifique sua conexão.");
         }
     }
 
@@ -157,29 +167,29 @@ public class EstoqueScreen extends JFrame {
                 tableModel.addRow(new Object[]{
                         estoque.id(),
                         nomeProduto,
-                        estoque.quantidade(),
+                        String.format("%.2f", estoque.quantidade()),
                         estoque.localTanque(),
                         estoque.localEndereco(),
                         estoque.loteFabricacao(),
-                        estoque.dataValidade(),
+                        estoque.dataValidade().format(dateFormatter),
                         estoque.tipoEstoque()
                 });
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar o estoque: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar o estoque. Verifique sua conexão.");
         }
     }
 
     private void salvarEstoque() {
         try {
-            BigDecimal quantidade = new BigDecimal(quantidadeField.getText());
-            LocalDate dataValidade = LocalDate.parse(dataValidadeField.getText());
-
             if (produtoSelecionado == null) {
-                JOptionPane.showMessageDialog(this, "Selecione um produto.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                showErrorDialog("Validação", "É necessário selecionar um produto.");
                 return;
             }
+            BigDecimal quantidade = new BigDecimal(quantidadeField.getText().replace(",", "."));
+            LocalDate dataValidade = LocalDate.parse(dataValidadeField.getText(), dateFormatter);
 
             EstoqueRequest request = new EstoqueRequest(
                     quantidade,
@@ -202,12 +212,13 @@ public class EstoqueScreen extends JFrame {
             limparCampos();
 
         } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Formato de data inválido. Use yyyy-mm-dd.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
+            showErrorDialog("Erro de Formato", "Formato de data inválido. Use dd/MM/yyyy.");
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Formato de quantidade inválido.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            showErrorDialog("Erro de Formato", "Formato de quantidade inválido. Use vírgula (,) como separador decimal.");
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível salvar o estoque: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o estoque. Verifique sua conexão.");
         }
     }
 
@@ -222,11 +233,11 @@ public class EstoqueScreen extends JFrame {
         try {
             EstoqueResponse estoqueParaEditar = estoqueService.findEstoqueById(estoqueIdEmEdicao);
             if (estoqueParaEditar != null) {
-                quantidadeField.setText(estoqueParaEditar.quantidade().toString());
+                quantidadeField.setText(String.valueOf(estoqueParaEditar.quantidade()).replace('.', ','));
                 localTanqueField.setText(estoqueParaEditar.localTanque());
                 localEnderecoField.setText(estoqueParaEditar.localEndereco());
                 loteFabricacaoField.setText(estoqueParaEditar.loteFabricacao());
-                dataValidadeField.setText(estoqueParaEditar.dataValidade().toString());
+                dataValidadeField.setText(estoqueParaEditar.dataValidade().format(dateFormatter));
                 tipoEstoqueComboBox.setSelectedItem(estoqueParaEditar.tipoEstoque());
 
                 ProdutoResponse produtoAssociado = produtosMap.get(estoqueParaEditar.produtoId());
@@ -235,15 +246,15 @@ public class EstoqueScreen extends JFrame {
                     produtoField.setText(produtoAssociado.nome());
                 } else {
                     this.produtoSelecionado = null;
-                    produtoField.setText("");
+                    produtoField.setText("Produto não encontrado");
                 }
+                JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar dados do estoque para edição: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (ApiServiceException e) {
+            showErrorDialog("Erro de API", "Não foi possível carregar os dados do estoque para edição: " + e.getMessage());
+        } catch (IOException e) {
+            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os dados do estoque. Verifique sua conexão.");
         }
-
-        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void excluirEstoque() {
@@ -262,9 +273,10 @@ public class EstoqueScreen extends JFrame {
                 JOptionPane.showMessageDialog(this, "Estoque excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 carregarEstoques();
                 limparCampos();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir estoque: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+            } catch (ApiServiceException e) {
+                showErrorDialog("Erro de API", "Não foi possível excluir o estoque: " + e.getMessage());
+            } catch (IOException e) {
+                showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para excluir o estoque. Verifique sua conexão.");
             }
         }
     }
@@ -280,6 +292,10 @@ public class EstoqueScreen extends JFrame {
         produtoSelecionado = null;
         tabelaEstoque.clearSelection();
         estoqueIdEmEdicao = null;
+    }
+
+    private void showErrorDialog(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
     private JLabel createStyledLabel(String text, Color color) {

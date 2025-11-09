@@ -2,13 +2,11 @@ package br.com.contato.service;
 
 import br.com.common.http.ApiClient;
 import br.com.common.service.ApiServiceException;
-import br.com.contato.dto.ContatoListResponse; // Importar a nova classe
+import br.com.contato.dto.ContatoListResponse;
 import br.com.contato.dto.ContatoRequest;
 import br.com.contato.dto.ContatoResponse;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.List;
 
 public class ContatoService {
@@ -20,9 +18,12 @@ public class ContatoService {
     }
 
     public List<ContatoResponse> findContatos() throws IOException, ApiServiceException {
-        // Mudar para esperar ContatoListResponse
         ContatoListResponse contatoListResponse = apiClient.get("/contatos", ContatoListResponse.class);
-        return contatoListResponse.getContatos(); // Extrair a lista de contatos
+        return contatoListResponse.getContatos();
+    }
+
+    public ContatoResponse findContatoById(Long id) throws IOException, ApiServiceException {
+        return apiClient.get("/contatos/" + id, ContatoResponse.class);
     }
 
     public ContatoResponse createContato(ContatoRequest contatoRequest) throws IOException, ApiServiceException {
