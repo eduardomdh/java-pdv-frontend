@@ -2,9 +2,13 @@ package br.com.ui.view;
 
 import br.com.pessoa.dto.PessoaResponse;
 import br.com.pessoa.service.PessoaService;
+import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.List;
 
@@ -12,9 +16,9 @@ public class SelecaoPessoaScreen extends JDialog {
 
     private JTable tabelaPessoas;
     private DefaultTableModel tableModel;
-    private JButton selecionarButton;
     private PessoaResponse pessoaSelecionada;
     private List<PessoaResponse> listaPessoas;
+    private JTextField searchField;
 
     private final PessoaService pessoaService;
 
@@ -22,9 +26,48 @@ public class SelecaoPessoaScreen extends JDialog {
         super(owner, "Selecionar Pessoa", true);
         this.pessoaService = new PessoaService();
 
-        setSize(700, 500);
+        setSize(800, 600);
         setLocationRelativeTo(owner);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(0, 0));
+        getContentPane().setBackground(ColorPalette.BACKGROUND);
+
+        // Header
+        add(createHeader(), BorderLayout.NORTH);
+
+        // Tabela
+        add(createTablePanel(), BorderLayout.CENTER);
+
+        // Botões
+        add(createButtonsPanel(), BorderLayout.SOUTH);
+
+        carregarPessoas();
+    }
+
+    private JPanel createHeader() {
+        JPanel headerPanel = new JPanel(new BorderLayout(10, 10));
+        headerPanel.setOpaque(false);
+        headerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JLabel titleLabel = new JLabel("Selecione uma Pessoa");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+
+        searchField = new JTextField();
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                filterTable();
+            }
+        });
+        headerPanel.add(searchField, BorderLayout.CENTER);
+
+        return headerPanel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setOpaque(false);
+        tablePanel.setBorder(new EmptyBorder(0, 10, 10, 10));
 
         String[] colunas = {"ID", "Nome", "CPF/CNPJ"};
         tableModel = new DefaultTableModel(colunas, 0) {
@@ -35,62 +78,91 @@ public class SelecaoPessoaScreen extends JDialog {
         };
         tabelaPessoas = new JTable(tableModel);
         tabelaPessoas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane tableScrollPane = new JScrollPane(tabelaPessoas);
+        tabelaPessoas.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabelaPessoas.setRowHeight(30);
+        tabelaPessoas.setGridColor(ColorPalette.BORDER_COLOR);
 
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        selecionarButton = new JButton("Selecionar");
+        JTableHeader header = tabelaPessoas.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setBackground(ColorPalette.PANEL_BACKGROUND);
+        header.setForeground(ColorPalette.TEXT);
+
+        JScrollPane scrollPane = new JScrollPane(tabelaPessoas);
+        scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+
+        return tablePanel;
+    }
+
+    private JPanel createButtonsPanel() {
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        buttonsPanel.setOpaque(false);
+
         JButton cancelarButton = new JButton("Cancelar");
-        buttonsPanel.add(selecionarButton);
+        cancelarButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        cancelarButton.addActionListener(e -> onCancelar());
         buttonsPanel.add(cancelarButton);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        mainPanel.add(tableScrollPane, BorderLayout.CENTER);
-        mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
-
-        add(mainPanel);
-
+        JButton selecionarButton = new JButton("Selecionar");
+        selecionarButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        selecionarButton.setBackground(ColorPalette.PRIMARY);
+        selecionarButton.setForeground(ColorPalette.WHITE_TEXT);
         selecionarButton.addActionListener(e -> onSelecionar());
-        cancelarButton.addActionListener(e -> onCancelar());
+        buttonsPanel.add(selecionarButton);
 
-        carregarPessoas();
+        return buttonsPanel;
     }
 
     private void carregarPessoas() {
-        tableModel.setRowCount(0);
         try {
             this.listaPessoas = pessoaService.findPessoas();
-            for (PessoaResponse pessoa : listaPessoas) {
-                tableModel.addRow(new Object[]{
-                        pessoa.id(),
-                        pessoa.nomeCompleto(),
-                        pessoa.cpfCnpj()
-                });
-            }
+            updateTable(this.listaPessoas);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao carregar pessoas: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        }
+    }
+
+    private void updateTable(List<PessoaResponse> pessoas) {
+        tableModel.setRowCount(0);
+        for (PessoaResponse pessoa : pessoas) {
+            tableModel.addRow(new Object[]{
+                    pessoa.id(),
+                    pessoa.nomeCompleto(),
+                    pessoa.cpfCnpj()
+            });
+        }
+    }
+
+    private void filterTable() {
+        String searchText = searchField.getText().toLowerCase();
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
+        tabelaPessoas.setRowSorter(sorter);
+        if (searchText.trim().length() == 0) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText));
         }
     }
 
     private void onSelecionar() {
         int selectedRow = tabelaPessoas.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione uma pessoa na tabela.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Por favor, selecione uma pessoa na tabela.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Long pessoaId = (Long) tableModel.getValueAt(selectedRow, 0);
+        int modelRow = tabelaPessoas.convertRowIndexToModel(selectedRow);
+        Long pessoaId = (Long) tableModel.getValueAt(modelRow, 0);
         this.pessoaSelecionada = listaPessoas.stream()
                 .filter(p -> p.id().equals(pessoaId))
                 .findFirst()
                 .orElse(null);
-        setVisible(false);
+        dispose();
     }
 
     private void onCancelar() {
         this.pessoaSelecionada = null;
-        setVisible(false);
+        dispose();
     }
 
     public PessoaResponse getPessoaSelecionada() {

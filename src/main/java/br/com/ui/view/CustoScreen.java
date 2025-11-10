@@ -9,9 +9,12 @@ import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -33,56 +36,128 @@ public class CustoScreen extends JFrame {
         this.custoService = new CustoService();
 
         setTitle("Gerenciamento de Custos");
-        setSize(800, 600);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setLayout(new BorderLayout(0, 0));
 
-        JPanel fieldsPanel = new JPanel(new GridLayout(6, 2, 10, 10));
-        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
-        fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados do Custo", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        // Header
+        JPanel headerPanel = createHeader("Gerenciamento de Custos");
+        contentPane.add(headerPanel, BorderLayout.NORTH);
 
-        fieldsPanel.add(createStyledLabel("Imposto (%):", ColorPalette.TEXT));
-        impostoField = createStyledTextField();
-        fieldsPanel.add(impostoField);
+        // Main Content
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setDividerLocation(350);
+        splitPane.setBorder(BorderFactory.createEmptyBorder());
+        splitPane.setBackground(ColorPalette.BACKGROUND);
 
-        fieldsPanel.add(createStyledLabel("Custo Variável (R$):", ColorPalette.TEXT));
-        custoVariavelField = createStyledTextField();
-        fieldsPanel.add(custoVariavelField);
+        // Form Panel (Left)
+        JPanel formPanel = createFormPanel();
+        splitPane.setLeftComponent(formPanel);
 
-        fieldsPanel.add(createStyledLabel("Custo Fixo (R$):", ColorPalette.TEXT));
-        custoFixoField = createStyledTextField();
-        fieldsPanel.add(custoFixoField);
+        // Table Panel (Right)
+        JPanel tablePanel = createTablePanel();
+        splitPane.setRightComponent(tablePanel);
 
-        fieldsPanel.add(createStyledLabel("Margem de Lucro (%):", ColorPalette.TEXT));
-        margemLucroField = createStyledTextField();
-        fieldsPanel.add(margemLucroField);
+        contentPane.add(splitPane, BorderLayout.CENTER);
 
-        fieldsPanel.add(createStyledLabel("Data Processamento (dd/MM/yyyy):", ColorPalette.TEXT));
-        dataProcessamentoField = createStyledTextField();
-        fieldsPanel.add(dataProcessamentoField);
+        carregarCustos();
+    }
 
-        fieldsPanel.add(createStyledLabel("Tipo de Custo:", ColorPalette.TEXT));
+    private JPanel createHeader(String title) {
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setBorder(new EmptyBorder(0, 10, 0, 0));
+        headerPanel.add(titleLabel);
+
+        return headerPanel;
+    }
+
+    private JPanel createFormPanel() {
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        formPanel.add(createLabel("Imposto (%):"));
+        impostoField = createTextField();
+        formPanel.add(impostoField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Custo Variável (R$):"));
+        custoVariavelField = createTextField();
+        formPanel.add(custoVariavelField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Custo Fixo (R$):"));
+        custoFixoField = createTextField();
+        formPanel.add(custoFixoField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Margem de Lucro (%):"));
+        margemLucroField = createTextField();
+        formPanel.add(margemLucroField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Data Processamento (dd/MM/yyyy):"));
+        dataProcessamentoField = createTextField();
+        formPanel.add(dataProcessamentoField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Tipo de Custo:"));
         tipoCustoComboBox = new JComboBox<>(TipoCusto.values());
-        fieldsPanel.add(tipoCustoComboBox);
+        tipoCustoComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tipoCustoComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        tipoCustoComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        formPanel.add(tipoCustoComboBox);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        formPanel.add(createButtonsPanel());
+        formPanel.add(Box.createVerticalGlue());
+
+        return formPanel;
+    }
+
+    private JPanel createButtonsPanel() {
+        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        JButton novoButton = createButton("Novo", ColorPalette.ACCENT_INFO, ColorPalette.WHITE_TEXT);
+        novoButton.addActionListener(e -> limparCampos());
         buttonsPanel.add(novoButton);
+
+        JButton salvarButton = createButton("Salvar", ColorPalette.ACCENT_SUCCESS, ColorPalette.WHITE_TEXT);
+        salvarButton.addActionListener(e -> salvarCusto());
         buttonsPanel.add(salvarButton);
+
+        JButton editarButton = createButton("Editar", ColorPalette.ACCENT_WARNING, ColorPalette.WHITE_TEXT);
+        editarButton.addActionListener(e -> editarCusto());
         buttonsPanel.add(editarButton);
+
+        JButton excluirButton = createButton("Excluir", ColorPalette.ACCENT_DANGER, ColorPalette.WHITE_TEXT);
+        excluirButton.addActionListener(e -> excluirCusto());
         buttonsPanel.add(excluirButton);
 
-        String[] colunas = {"ID", "Imposto", "C. Variável", "C. Fixo", "M. Lucro", "Data", "Tipo"};
+        return buttonsPanel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(ColorPalette.BACKGROUND);
+        tablePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        String[] colunas = {"ID", "Imposto (%)", "C. Variável (R$)", "C. Fixo (R$)", "M. Lucro (%)", "Data", "Tipo"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -91,23 +166,21 @@ public class CustoScreen extends JFrame {
         };
         tabelaCustos = new JTable(tableModel);
         tabelaCustos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane tableScrollPane = new JScrollPane(tabelaCustos);
+        tabelaCustos.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabelaCustos.setRowHeight(30);
+        tabelaCustos.setGridColor(ColorPalette.BORDER_COLOR);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setOpaque(false);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        mainPanel.add(fieldsPanel, BorderLayout.NORTH);
-        mainPanel.add(tableScrollPane, BorderLayout.CENTER);
-        mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
+        JTableHeader header = tabelaCustos.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setBackground(ColorPalette.PANEL_BACKGROUND);
+        header.setForeground(ColorPalette.TEXT);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
 
-        contentPane.add(mainPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(tabelaCustos);
+        scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        novoButton.addActionListener(e -> limparCampos());
-        salvarButton.addActionListener(e -> salvarCusto());
-        excluirButton.addActionListener(e -> excluirCusto());
-        editarButton.addActionListener(e -> editarCusto());
-
-        carregarCustos();
+        return tablePanel;
     }
 
     private void carregarCustos() {
@@ -125,10 +198,8 @@ public class CustoScreen extends JFrame {
                         custo.tipoCusto()
                 });
             }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os custos: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os custos. Verifique sua conexão.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Carregar", "Não foi possível carregar os custos: " + e.getMessage());
         }
     }
 
@@ -140,14 +211,7 @@ public class CustoScreen extends JFrame {
             double margemLucro = Double.parseDouble(margemLucroField.getText().replace(",", "."));
             LocalDate dataProcessamento = LocalDate.parse(dataProcessamentoField.getText(), dateFormatter);
 
-            CustoRequest request = new CustoRequest(
-                    imposto,
-                    custoVariavel,
-                    custoFixo,
-                    margemLucro,
-                    dataProcessamento,
-                    (TipoCusto) tipoCustoComboBox.getSelectedItem()
-            );
+            CustoRequest request = new CustoRequest(imposto, custoVariavel, custoFixo, margemLucro, dataProcessamento, (TipoCusto) tipoCustoComboBox.getSelectedItem());
 
             if (custoIdEmEdicao == null) {
                 custoService.createCusto(request);
@@ -160,54 +224,46 @@ public class CustoScreen extends JFrame {
             limparCampos();
 
         } catch (DateTimeParseException ex) {
-            showErrorDialog("Erro de Formato", "Formato de data inválido. Use dd/MM/yyyy.");
+            showErrorDialog("Erro de Formato", "Data inválida. Use o formato dd/MM/yyyy.");
         } catch (NumberFormatException ex) {
-            showErrorDialog("Erro de Formato", "Formato de número inválido para um dos campos de custo. Use vírgula (,) como separador decimal.");
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível salvar o custo: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o custo. Verifique sua conexão.");
+            showErrorDialog("Erro de Formato", "Número inválido. Use ponto ou vírgula como separador decimal.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro de Salvamento", "Não foi possível salvar o custo: " + e.getMessage());
         }
     }
 
     private void editarCusto() {
         int selectedRow = tabelaCustos.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um custo para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um custo na tabela para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        custoIdEmEdicao = (Long) tabelaCustos.getValueAt(selectedRow, 0);
-        impostoField.setText(tabelaCustos.getValueAt(selectedRow, 1).toString().replace('.', ','));
-        custoVariavelField.setText(tabelaCustos.getValueAt(selectedRow, 2).toString().replace('.', ','));
-        custoFixoField.setText(tabelaCustos.getValueAt(selectedRow, 3).toString().replace('.', ','));
-        margemLucroField.setText(tabelaCustos.getValueAt(selectedRow, 4).toString().replace('.', ','));
-        dataProcessamentoField.setText(tabelaCustos.getValueAt(selectedRow, 5).toString());
-        tipoCustoComboBox.setSelectedItem(tabelaCustos.getValueAt(selectedRow, 6));
-
-        JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
+        custoIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
+        impostoField.setText(tableModel.getValueAt(selectedRow, 1).toString());
+        custoVariavelField.setText(tableModel.getValueAt(selectedRow, 2).toString());
+        custoFixoField.setText(tableModel.getValueAt(selectedRow, 3).toString());
+        margemLucroField.setText(tableModel.getValueAt(selectedRow, 4).toString());
+        dataProcessamentoField.setText(tableModel.getValueAt(selectedRow, 5).toString());
+        tipoCustoComboBox.setSelectedItem(tableModel.getValueAt(selectedRow, 6));
     }
 
     private void excluirCusto() {
         int selectedRow = tabelaCustos.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um custo para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um custo na tabela para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Long id = (Long) tabelaCustos.getValueAt(selectedRow, 0);
-
-        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o custo selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        Long id = (Long) tableModel.getValueAt(selectedRow, 0);
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir este custo?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 custoService.deleteCusto(id);
-                JOptionPane.showMessageDialog(this, "Custo excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 carregarCustos();
                 limparCampos();
-            } catch (ApiServiceException e) {
-                showErrorDialog("Erro de API", "Não foi possível excluir o custo: " + e.getMessage());
-            } catch (IOException e) {
-                showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para excluir o custo. Verifique sua conexão.");
+            } catch (ApiServiceException | IOException e) {
+                showErrorDialog("Erro ao Excluir", "Não foi possível excluir o custo: " + e.getMessage());
             }
         }
     }
@@ -227,40 +283,58 @@ public class CustoScreen extends JFrame {
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
-    private JLabel createStyledLabel(String text, Color color) {
+    // Component Creation Methods
+    private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(color);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        label.setForeground(ColorPalette.TEXT);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
 
-    private JTextField createStyledTextField() {
-        JTextField textField = new JTextField(15);
-        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+    private JTextField createTextField() {
+        JTextField textField = new JTextField();
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         textField.setBackground(ColorPalette.PANEL_BACKGROUND);
         textField.setForeground(ColorPalette.TEXT);
-        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+                new EmptyBorder(8, 8, 8, 8)
         ));
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         return textField;
     }
 
-    private JButton createStyledButton(String text, Color background, Color foreground) {
+    private JButton createButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
         button.setBackground(background);
         button.setForeground(foreground);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(background.darker());
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(background);
+            }
+        });
+
         return button;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup();
+            try {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            } catch (UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
             new CustoScreen().setVisible(true);
         });
     }

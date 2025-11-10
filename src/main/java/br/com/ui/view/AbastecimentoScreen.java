@@ -10,6 +10,7 @@ import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -35,54 +36,65 @@ public class AbastecimentoScreen extends JFrame {
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
-        contentPane.setLayout(new BorderLayout(10, 10));
+        contentPane.setLayout(new BorderLayout(0, 0));
 
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(ColorPalette.BACKGROUND);
-        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-
-        JLabel userLabel = new JLabel("Bem-vindo, " + loggedInUsername + "!", SwingConstants.LEFT);
-        userLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        userLabel.setForeground(ColorPalette.TEXT);
-        topPanel.add(userLabel, BorderLayout.WEST);
-
-        JButton logoutButton = createStyledButton("Sair");
-        logoutButton.addActionListener(e -> {
-            this.dispose();
-            new LoginScreen().setVisible(true);
-        });
-        JPanel logoutButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        logoutButtonPanel.setOpaque(false);
-        logoutButtonPanel.add(logoutButton);
-        topPanel.add(logoutButtonPanel, BorderLayout.EAST);
-
-        JLabel mainTitleLabel = new JLabel("Central de Abastecimento", SwingConstants.CENTER);
-        mainTitleLabel.setFont(new Font("Arial", Font.BOLD, 32));
-        mainTitleLabel.setForeground(ColorPalette.PRIMARY);
-        mainTitleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
-
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setOpaque(false);
-        headerPanel.add(topPanel, BorderLayout.NORTH);
-        headerPanel.add(mainTitleLabel, BorderLayout.CENTER);
-
+        // Header
+        JPanel headerPanel = createHeader();
         contentPane.add(headerPanel, BorderLayout.NORTH);
 
-        pumpsPanel = new JPanel(new GridLayout(1, 3, 20, 0));
+        // Painel de Bombas
+        pumpsPanel = new JPanel(new GridLayout(0, 3, 20, 20));
         pumpsPanel.setOpaque(false);
-        pumpsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        contentPane.add(pumpsPanel, BorderLayout.CENTER);
+        pumpsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        JScrollPane scrollPane = new JScrollPane(pumpsPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
 
         carregarBombas();
     }
 
+    private JPanel createHeader() {
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
+
+        JLabel titleLabel = new JLabel("Central de Abastecimento");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setBorder(new EmptyBorder(0, 20, 0, 0));
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+
+        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        userPanel.setOpaque(false);
+        JLabel userLabel = new JLabel("Operador: " + loggedInUsername);
+        userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        userLabel.setForeground(ColorPalette.TEXT_MUTED);
+        userPanel.add(userLabel);
+
+        JButton logoutButton = new JButton("Sair");
+        logoutButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        logoutButton.setForeground(ColorPalette.WHITE_TEXT);
+        logoutButton.setBackground(ColorPalette.PRIMARY);
+        logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(new EmptyBorder(8, 15, 8, 15));
+        logoutButton.addActionListener(e -> {
+            this.dispose();
+            new LoginScreen().setVisible(true);
+        });
+        userPanel.add(logoutButton);
+        userPanel.setBorder(new EmptyBorder(0, 0, 0, 20));
+        headerPanel.add(userPanel, BorderLayout.EAST);
+
+        return headerPanel;
+    }
+
     private void carregarBombas() {
-        System.out.println("Iniciando o carregamento das bombas...");
-        SwingWorker<List<BombaDTO>, Void> worker = new SwingWorker<List<BombaDTO>, Void>() {
+        SwingWorker<List<BombaDTO>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<BombaDTO> doInBackground() throws Exception {
-                System.out.println("Buscando bombas do backend...");
                 return bombaService.buscarTodas();
             }
 
@@ -91,112 +103,99 @@ public class AbastecimentoScreen extends JFrame {
                 try {
                     pumpsPanel.removeAll();
                     List<BombaDTO> bombas = get();
-                    System.out.println("Bombas recebidas: " + (bombas != null ? bombas.size() : "null"));
-
                     if (bombas != null && !bombas.isEmpty()) {
                         for (BombaDTO bomba : bombas) {
-                            System.out.println("Criando painel para a bomba: " + bomba.getNome());
-                            pumpsPanel.add(createPumpSection(bomba));
+                            pumpsPanel.add(createPumpCard(bomba));
                         }
                     } else {
-                        System.out.println("Nenhuma bomba encontrada ou a lista está vazia.");
+                        JLabel noPumpsLabel = new JLabel("Nenhuma bomba encontrada.");
+                        noPumpsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+                        noPumpsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                        pumpsPanel.setLayout(new BorderLayout());
+                        pumpsPanel.add(noPumpsLabel, BorderLayout.CENTER);
                     }
-
                     pumpsPanel.revalidate();
                     pumpsPanel.repaint();
-                    System.out.println("Painel de bombas atualizado.");
-
                 } catch (InterruptedException | ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    System.err.println("Erro ao carregar bombas: " + cause.getMessage());
-                    cause.printStackTrace();
-
-                    if (cause instanceof IOException || cause instanceof ApiServiceException) {
-                        JOptionPane.showMessageDialog(AbastecimentoScreen.this, "Erro ao carregar bombas: " + cause.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(AbastecimentoScreen.this, "Ocorreu um erro inesperado.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    }
+                    handleError(e, "Erro ao carregar bombas");
                 }
             }
         };
         worker.execute();
     }
 
-    private JPanel createPumpSection(BombaDTO bomba) {
-        JPanel sectionPanel = new JPanel();
-        sectionPanel.setLayout(new BoxLayout(sectionPanel, BoxLayout.Y_AXIS));
-        sectionPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
-        sectionPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 2),
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+    private JPanel createPumpCard(BombaDTO bomba) {
+        JPanel cardPanel = new JPanel(new BorderLayout(10, 10));
+        cardPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+                new EmptyBorder(20, 20, 20, 20)
         ));
 
+        // Título da Bomba
         JLabel titleLabel = new JLabel(bomba.getNome(), SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(ColorPalette.TEXT);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        sectionPanel.add(titleLabel);
-        sectionPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        cardPanel.add(titleLabel, BorderLayout.NORTH);
 
-        sectionPanel.add(Box.createVerticalGlue());
-
+        // Status da Bomba
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        statusPanel.setOpaque(false);
+        JLabel statusLabel = new JLabel("Status:");
+        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        JLabel statusValue = new JLabel(bomba.getStatus());
+        statusValue.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        
         Color statusColor;
         switch (bomba.getStatus()) {
             case "ATIVA":
-                statusColor = Color.ORANGE;
+                statusColor = ColorPalette.ACCENT_WARNING;
                 break;
             case "CONCLUIDA":
-                statusColor = Color.GREEN;
+                statusColor = ColorPalette.ACCENT_SUCCESS;
                 break;
             default:
-                statusColor = Color.RED;
+                statusColor = ColorPalette.ACCENT_DANGER;
                 break;
         }
+        statusValue.setForeground(statusColor);
+        
+        statusPanel.add(statusLabel);
+        statusPanel.add(statusValue);
+        cardPanel.add(statusPanel, BorderLayout.CENTER);
 
-        JLabel statusLabel = new JLabel("Status: " + bomba.getStatus(), SwingConstants.CENTER);
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        statusLabel.setForeground(statusColor);
-        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        sectionPanel.add(statusLabel);
+        // Ação
+        if ("INATIVA".equals(bomba.getStatus())) {
+            cardPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            cardPanel.addMouseListener(new MouseAdapter() {
+                public void mouseEntered(MouseEvent evt) {
+                    cardPanel.setBackground(ColorPalette.PRIMARY_LIGHT);
+                }
 
-        if (bomba.getStatus().equals("INATIVA")) {
-            sectionPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            sectionPanel.addMouseListener(new MouseAdapter() {
-                @Override
+                public void mouseExited(MouseEvent evt) {
+                    cardPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+                }
+                
                 public void mouseClicked(MouseEvent e) {
                     abrirDialogoAbastecimento(bomba);
                 }
             });
-        } else if (bomba.getStatus().equals("CONCLUIDA")) {
-            sectionPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            sectionPanel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    JOptionPane.showMessageDialog(AbastecimentoScreen.this,
-                            "Aguarde, preparando a bomba para um novo uso.",
-                            "Bomba em Preparação",
-                            JOptionPane.INFORMATION_MESSAGE);
-                }
-            });
-
-            Timer timer = new Timer(5000, e -> {
-                System.out.println("Timer de 5s disparado para a bomba " + bomba.getNome() + ". Resetando para INATIVA.");
-                try {
-                    bombaService.atualizarStatus(bomba.getId(), "INATIVA");
-                    carregarBombas();
-                } catch (IOException | ApiServiceException ex) {
-                    JOptionPane.showMessageDialog(AbastecimentoScreen.this,
-                            "Erro ao resetar a bomba: " + ex.getMessage(),
-                            "Erro de API",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            });
+        } else if ("CONCLUIDA".equals(bomba.getStatus())) {
+            Timer timer = new Timer(3000, evt -> resetBombaStatus(bomba));
             timer.setRepeats(false);
             timer.start();
         }
 
-        return sectionPanel;
+        return cardPanel;
+    }
+
+    private void resetBombaStatus(BombaDTO bomba) {
+        try {
+            bombaService.atualizarStatus(bomba.getId(), "INATIVA");
+            carregarBombas();
+        } catch (IOException | ApiServiceException ex) {
+            handleError(ex, "Erro ao resetar a bomba");
+        }
     }
 
     private void abrirDialogoAbastecimento(BombaDTO bomba) {
@@ -206,63 +205,60 @@ public class AbastecimentoScreen extends JFrame {
         if (dialog.isConfirmado()) {
             try {
                 bombaService.atualizarStatus(bomba.getId(), "ATIVA");
-
                 carregarBombas();
 
                 ProdutoDTO produto = dialog.getProdutoSelecionado();
                 double litros = dialog.getLitrosAbastecidos();
                 double reais = dialog.getReaisAbastecidos();
                 String formaPagamento = dialog.getFormaPagamento();
-                new AnimacaoAbastecimentoDialog(this, bomba, produto, litros, reais).setVisible(true);
 
+                new AnimacaoAbastecimentoDialog(this, bomba, produto, litros, reais).setVisible(true);
                 carregarBombas();
 
-                int resposta = JOptionPane.showConfirmDialog(this,
-                        "Deseja imprimir o cupom fiscal (NFC-e)?",
-                        "Impressão de Cupom",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
-
-                if (resposta == JOptionPane.YES_OPTION) {
-                    SelecaoClienteScreen clienteScreen = new SelecaoClienteScreen(this);
-                    clienteScreen.setVisible(true);
-
-                    PessoaResponse clienteSelecionado = clienteScreen.getClienteSelecionado();
-                    boolean consumidorNaoIdentificado = clienteScreen.isConsumidorNaoIdentificado();
-
-                    if (clienteSelecionado != null || consumidorNaoIdentificado) {
-                        try {
-                            pdfService.gerarDanfeNfce(loggedInUsername, bomba, produto, litros, reais, clienteSelecionado, formaPagamento);
-                            JOptionPane.showMessageDialog(this, "PDF da NFC-e gerado e aberto com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                        } catch (IOException ex) {
-                            JOptionPane.showMessageDialog(this, "Erro ao gerar ou abrir o PDF: " + ex.getMessage(), "Erro de PDF", JOptionPane.ERROR_MESSAGE);
-                            ex.printStackTrace();
-                        }
-                    }
-                }
+                promptForNfce(bomba, produto, litros, reais, formaPagamento);
 
             } catch (IOException | ApiServiceException e) {
-                JOptionPane.showMessageDialog(this, "Erro ao iniciar abastecimento: " + e.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
+                handleError(e, "Erro ao iniciar abastecimento");
             }
         }
     }
 
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setFocusPainted(false);
-        button.setBackground(ColorPalette.PRIMARY);
-        button.setForeground(ColorPalette.WHITE_TEXT);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        button.setPreferredSize(new Dimension(120, 40));
-        return button;
+    private void promptForNfce(BombaDTO bomba, ProdutoDTO produto, double litros, double reais, String formaPagamento) {
+        int resposta = JOptionPane.showConfirmDialog(this,
+                "Deseja imprimir o cupom fiscal (NFC-e)?",
+                "Impressão de Cupom",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (resposta == JOptionPane.YES_OPTION) {
+            SelecaoClienteScreen clienteScreen = new SelecaoClienteScreen(this);
+            clienteScreen.setVisible(true);
+
+            PessoaResponse cliente = clienteScreen.getClienteSelecionado();
+            if (cliente != null || clienteScreen.isConsumidorNaoIdentificado()) {
+                try {
+                    pdfService.gerarDanfeNfce(loggedInUsername, bomba, produto, litros, reais, cliente, formaPagamento);
+                    JOptionPane.showMessageDialog(this, "PDF da NFC-e gerado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException ex) {
+                    handleError(ex, "Erro ao gerar PDF");
+                }
+            }
+        }
+    }
+
+    private void handleError(Exception e, String title) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Ocorreu um erro: " + e.getMessage(), title, JOptionPane.ERROR_MESSAGE);
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup();
-            new AbastecimentoScreen("TesteUser").setVisible(true);
+            try {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            } catch (UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
+            new AbastecimentoScreen("OperadorX").setVisible(true);
         });
     }
 }

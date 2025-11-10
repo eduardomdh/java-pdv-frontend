@@ -10,9 +10,12 @@ import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,8 +27,7 @@ import java.util.Map;
 
 public class PrecoScreen extends JFrame {
 
-    private JTextField valorField, dataAlteracaoField;
-    private JTextField produtoField;
+    private JTextField valorField, dataAlteracaoField, produtoField;
     private JButton selecionarProdutoButton;
     private ProdutoResponse produtoSelecionado;
     private JTable tabelaPrecos;
@@ -34,7 +36,7 @@ public class PrecoScreen extends JFrame {
 
     private final PrecoService precoService;
     private final ProdutoService produtoService;
-    private Map<Long, ProdutoResponse> produtosMap;
+    private final Map<Long, ProdutoResponse> produtosMap;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public PrecoScreen() {
@@ -43,48 +45,114 @@ public class PrecoScreen extends JFrame {
         this.produtosMap = new HashMap<>();
 
         setTitle("Gerenciamento de Preços");
-        setSize(800, 650);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setLayout(new BorderLayout(0, 0));
 
-        JPanel fieldsPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
-        fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados de Preço", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        contentPane.add(createHeader("Gerenciamento de Preços"), BorderLayout.NORTH);
 
-        fieldsPanel.add(createStyledLabel("Produto:", ColorPalette.TEXT));
-        JPanel produtoPanel = new JPanel(new BorderLayout());
-        produtoField = createStyledTextField();
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createFormPanel(), createTablePanel());
+        splitPane.setDividerLocation(350);
+        splitPane.setBorder(BorderFactory.createEmptyBorder());
+        contentPane.add(splitPane, BorderLayout.CENTER);
+
+        carregarMapaProdutos();
+        carregarPrecos();
+    }
+
+    private JPanel createHeader(String title) {
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setBorder(new EmptyBorder(0, 10, 0, 0));
+        headerPanel.add(titleLabel);
+        return headerPanel;
+    }
+
+    private JPanel createFormPanel() {
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        formPanel.add(createLabel("Produto:"));
+        formPanel.add(createProdutoSelectionPanel());
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Valor (R$):"));
+        valorField = createTextField();
+        formPanel.add(valorField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Data Alteração (dd/MM/yyyy):"));
+        dataAlteracaoField = createTextField();
+        formPanel.add(dataAlteracaoField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        formPanel.add(createButtonsPanel());
+        formPanel.add(Box.createVerticalGlue());
+
+        return formPanel;
+    }
+
+    private JPanel createProdutoSelectionPanel() {
+        JPanel produtoPanel = new JPanel(new BorderLayout(5, 0));
+        produtoPanel.setOpaque(false);
+        produtoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        produtoPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        produtoField = createTextField();
         produtoField.setEditable(false);
-        selecionarProdutoButton = new JButton("Selecionar");
         produtoPanel.add(produtoField, BorderLayout.CENTER);
+
+        selecionarProdutoButton = new JButton("...");
+        selecionarProdutoButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        selecionarProdutoButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        selecionarProdutoButton.addActionListener(e -> abrirSelecaoProduto());
         produtoPanel.add(selecionarProdutoButton, BorderLayout.EAST);
-        fieldsPanel.add(produtoPanel);
 
-        fieldsPanel.add(createStyledLabel("Valor (R$):", ColorPalette.TEXT));
-        valorField = createStyledTextField();
-        fieldsPanel.add(valorField);
-        fieldsPanel.add(createStyledLabel("Data Alteração (dd/MM/yyyy):", ColorPalette.TEXT));
-        dataAlteracaoField = createStyledTextField();
-        fieldsPanel.add(dataAlteracaoField);
+        return produtoPanel;
+    }
 
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+    private JPanel createButtonsPanel() {
+        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        JButton novoButton = createButton("Novo", ColorPalette.ACCENT_INFO, ColorPalette.WHITE_TEXT);
+        novoButton.addActionListener(e -> limparCampos());
         buttonsPanel.add(novoButton);
+
+        JButton salvarButton = createButton("Salvar", ColorPalette.ACCENT_SUCCESS, ColorPalette.WHITE_TEXT);
+        salvarButton.addActionListener(e -> salvarPreco());
         buttonsPanel.add(salvarButton);
+
+        JButton editarButton = createButton("Editar", ColorPalette.ACCENT_WARNING, ColorPalette.WHITE_TEXT);
+        editarButton.addActionListener(e -> editarPreco());
         buttonsPanel.add(editarButton);
+
+        JButton excluirButton = createButton("Excluir", ColorPalette.ACCENT_DANGER, ColorPalette.WHITE_TEXT);
+        excluirButton.addActionListener(e -> excluirPreco());
         buttonsPanel.add(excluirButton);
 
-        String[] colunas = {"ID", "Produto", "Valor", "Data de Alteração"};
+        return buttonsPanel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(ColorPalette.BACKGROUND);
+        tablePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        String[] colunas = {"ID", "Produto", "Valor (R$)", "Data de Alteração"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -93,25 +161,21 @@ public class PrecoScreen extends JFrame {
         };
         tabelaPrecos = new JTable(tableModel);
         tabelaPrecos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane tableScrollPane = new JScrollPane(tabelaPrecos);
+        tabelaPrecos.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabelaPrecos.setRowHeight(30);
+        tabelaPrecos.setGridColor(ColorPalette.BORDER_COLOR);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setOpaque(false);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        mainPanel.add(fieldsPanel, BorderLayout.NORTH);
-        mainPanel.add(tableScrollPane, BorderLayout.CENTER);
-        mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
+        JTableHeader header = tabelaPrecos.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setBackground(ColorPalette.PANEL_BACKGROUND);
+        header.setForeground(ColorPalette.TEXT);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
 
-        contentPane.add(mainPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(tabelaPrecos);
+        scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        selecionarProdutoButton.addActionListener(e -> abrirSelecaoProduto());
-        novoButton.addActionListener(e -> limparCampos());
-        salvarButton.addActionListener(e -> salvarPreco());
-        excluirButton.addActionListener(e -> excluirPreco());
-        editarButton.addActionListener(e -> editarPreco());
-
-        carregarMapaProdutos();
-        carregarPrecos();
+        return tablePanel;
     }
 
     private void abrirSelecaoProduto() {
@@ -131,10 +195,8 @@ public class PrecoScreen extends JFrame {
             for (ProdutoResponse produto : produtos) {
                 produtosMap.put(produto.id(), produto);
             }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os dados dos produtos: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os produtos. Verifique sua conexão.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Carregar Produtos", "Não foi possível carregar os dados dos produtos: " + e.getMessage());
         }
     }
 
@@ -143,8 +205,8 @@ public class PrecoScreen extends JFrame {
         try {
             List<PrecoResponse> precos = precoService.findPrecos();
             for (PrecoResponse preco : precos) {
-                ProdutoResponse produtoAssociado = produtosMap.get(preco.produtoId());
-                String nomeProduto = (produtoAssociado != null) ? produtoAssociado.nome() : "Produto Desconhecido";
+                ProdutoResponse produto = produtosMap.get(preco.produtoId());
+                String nomeProduto = (produto != null) ? produto.nome() : "ID: " + preco.produtoId();
                 tableModel.addRow(new Object[]{
                         preco.id(),
                         nomeProduto,
@@ -152,10 +214,8 @@ public class PrecoScreen extends JFrame {
                         preco.dataAlteracao().format(dateFormatter)
                 });
             }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os preços: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os preços. Verifique sua conexão.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Carregar Preços", "Não foi possível carregar os preços: " + e.getMessage());
         }
     }
 
@@ -167,13 +227,7 @@ public class PrecoScreen extends JFrame {
             }
             BigDecimal valor = new BigDecimal(valorField.getText().replace(",", "."));
             LocalDate dataAlteracao = LocalDate.parse(dataAlteracaoField.getText(), dateFormatter);
-
-            PrecoRequest request = new PrecoRequest(
-                    valor,
-                    dataAlteracao,
-                    LocalDate.now(),
-                    produtoSelecionado.id()
-            );
+            PrecoRequest request = new PrecoRequest(valor, dataAlteracao, LocalDate.now(), produtoSelecionado.id());
 
             if (precoIdEmEdicao == null) {
                 precoService.createPreco(request);
@@ -186,45 +240,30 @@ public class PrecoScreen extends JFrame {
             limparCampos();
 
         } catch (DateTimeParseException ex) {
-            showErrorDialog("Erro de Formato", "Formato de data inválido. Use dd/MM/yyyy.");
+            showErrorDialog("Erro de Formato", "Data inválida. Use o formato dd/MM/yyyy.");
         } catch (NumberFormatException ex) {
-            showErrorDialog("Erro de Formato", "Formato de valor inválido. Use vírgula (,) como separador decimal.");
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível salvar o preço: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o preço. Verifique sua conexão.");
+            showErrorDialog("Erro de Formato", "Valor inválido. Use ponto ou vírgula como separador decimal.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro de Salvamento", "Não foi possível salvar o preço: " + e.getMessage());
         }
     }
 
     private void editarPreco() {
         int selectedRow = tabelaPrecos.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um preço para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um preço na tabela para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         precoIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
-        
         try {
-            PrecoResponse precoParaEditar = precoService.findPrecoById(precoIdEmEdicao);
-            if (precoParaEditar != null) {
-                valorField.setText(String.valueOf(precoParaEditar.valor()).replace('.', ','));
-                dataAlteracaoField.setText(precoParaEditar.dataAlteracao().format(dateFormatter));
-
-                ProdutoResponse produtoAssociado = produtosMap.get(precoParaEditar.produtoId());
-                if (produtoAssociado != null) {
-                    this.produtoSelecionado = produtoAssociado;
-                    produtoField.setText(produtoAssociado.nome());
-                } else {
-                    this.produtoSelecionado = null;
-                    produtoField.setText("Produto não encontrado");
-                }
-                JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os dados do preço para edição: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os dados do preço. Verifique sua conexão.");
+            PrecoResponse preco = precoService.findPrecoById(precoIdEmEdicao);
+            valorField.setText(String.valueOf(preco.valor()).replace('.', ','));
+            dataAlteracaoField.setText(preco.dataAlteracao().format(dateFormatter));
+            produtoSelecionado = produtosMap.get(preco.produtoId());
+            produtoField.setText(produtoSelecionado != null ? produtoSelecionado.nome() : "");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Editar", "Não foi possível carregar os dados do preço: " + e.getMessage());
         }
     }
 
@@ -234,11 +273,10 @@ public class PrecoScreen extends JFrame {
             JOptionPane.showMessageDialog(this, "Selecione um preço para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
         Long id = (Long) tableModel.getValueAt(selectedRow, 0);
-
-        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o preço selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir este preço?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
+            // A exclusão está desabilitada na versão original, mantendo o comportamento.
             JOptionPane.showMessageDialog(this, "Funcionalidade de exclusão de preço ainda não disponível.", "Não Implementado", JOptionPane.WARNING_MESSAGE);
         }
     }
@@ -256,41 +294,58 @@ public class PrecoScreen extends JFrame {
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
-    private JLabel createStyledLabel(String text, Color color) {
+    // Component Creation Methods
+    private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(color);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        label.setForeground(ColorPalette.TEXT);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
 
-    private JTextField createStyledTextField() {
-        JTextField textField = new JTextField(15);
-        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+    private JTextField createTextField() {
+        JTextField textField = new JTextField();
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         textField.setBackground(ColorPalette.PANEL_BACKGROUND);
         textField.setForeground(ColorPalette.TEXT);
-        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+                new EmptyBorder(8, 8, 8, 8)
         ));
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         return textField;
     }
 
-    private JButton createStyledButton(String text, Color background, Color foreground) {
+    private JButton createButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
         button.setBackground(background);
         button.setForeground(foreground);
-        button.setOpaque(true);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(background.darker());
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(background);
+            }
+        });
+
         return button;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup();
+            try {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            } catch (UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
             new PrecoScreen().setVisible(true);
         });
     }

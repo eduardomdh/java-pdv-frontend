@@ -7,6 +7,7 @@ import br.com.service.ProdutoService;
 import br.com.ui.util.ColorPalette;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -24,7 +25,7 @@ public class AbastecimentoDialog extends JDialog {
     private JTextField litrosTextField;
     private JTextField reaisTextField;
     private JComboBox<String> pagamentoComboBox;
-    private ProdutoService produtoService;
+    private final ProdutoService produtoService;
     private List<ProdutoDTO> produtos;
 
     private ProdutoDTO produtoSelecionado;
@@ -34,93 +35,74 @@ public class AbastecimentoDialog extends JDialog {
     private boolean confirmado = false;
 
     public AbastecimentoDialog(Frame owner, BombaDTO bomba) {
-        super(owner, "Abastecer Bomba " + bomba.getNome(), true);
+        super(owner, "Iniciar Abastecimento na Bomba " + bomba.getNome(), true);
         this.produtoService = new ProdutoService();
 
-        setSize(450, 350);
+        setSize(450, 400);
         setLocationRelativeTo(owner);
-        setLayout(new GridLayout(5, 2, 10, 10));
-        getContentPane().setBackground(ColorPalette.BACKGROUND);
+        setResizable(false);
+        
+        Container contentPane = getContentPane();
+        contentPane.setBackground(ColorPalette.PANEL_BACKGROUND);
+        contentPane.setLayout(new BorderLayout());
+        ((JPanel) contentPane).setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        add(new JLabel("Combustível:"));
-        combustivelComboBox = new JComboBox<>();
-        add(combustivelComboBox);
+        // Título
+        JLabel titleLabel = new JLabel("Configurar Abastecimento", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setBorder(new EmptyBorder(0, 0, 20, 0));
+        contentPane.add(titleLabel, BorderLayout.NORTH);
 
-        add(new JLabel("Litros:"));
-        litrosTextField = new JTextField();
-        add(litrosTextField);
+        // Formulário
+        JPanel formPanel = new JPanel();
+        formPanel.setOpaque(false);
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        
+        formPanel.add(createLabel("Combustível:"));
+        combustivelComboBox = createComboBox();
+        formPanel.add(combustivelComboBox);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        add(new JLabel("Reais (R$):"));
-        reaisTextField = new JTextField();
-        add(reaisTextField);
+        formPanel.add(createLabel("Valor a abastecer (R$) ou Litros:"));
+        JPanel inputPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        inputPanel.setOpaque(false);
+        reaisTextField = createTextField("R$");
+        litrosTextField = createTextField("Litros");
+        inputPanel.add(reaisTextField);
+        inputPanel.add(litrosTextField);
+        formPanel.add(inputPanel);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        add(new JLabel("Forma de Pagamento:"));
-        pagamentoComboBox = new JComboBox<>(new String[]{"Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito"});
-        add(pagamentoComboBox);
+        formPanel.add(createLabel("Forma de Pagamento:"));
+        pagamentoComboBox = createComboBox(new String[]{"Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito"});
+        formPanel.add(pagamentoComboBox);
+        
+        contentPane.add(formPanel, BorderLayout.CENTER);
 
-        JButton okButton = new JButton("OK");
-        add(new JLabel());
-        add(okButton);
+        // Botões
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(new EmptyBorder(20, 0, 0, 0));
+        JButton cancelButton = new JButton("Cancelar");
+        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        cancelButton.addActionListener(e -> dispose());
+        JButton okButton = new JButton("Confirmar");
+        okButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        okButton.setBackground(ColorPalette.PRIMARY);
+        okButton.setForeground(ColorPalette.WHITE_TEXT);
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(okButton);
+        contentPane.add(buttonPanel, BorderLayout.SOUTH);
 
         carregarCombustiveis();
+        setupInputListeners();
 
-        litrosTextField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                if (e.getKeyChar() != KeyEvent.VK_BACK_SPACE) {
-                    reaisTextField.setText("");
-                }
-            }
-        });
-
-        reaisTextField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                if (e.getKeyChar() != KeyEvent.VK_BACK_SPACE) {
-                    litrosTextField.setText("");
-                }
-            }
-        });
-
-        okButton.addActionListener(e -> {
-            String itemSelecionado = (String) combustivelComboBox.getSelectedItem();
-            if (itemSelecionado == null) return;
-
-            String nomeCombustivel = itemSelecionado.split(" - ")[0];
-
-            Optional<ProdutoDTO> produtoOpt = produtos.stream()
-                    .filter(p -> p.getNome().equals(nomeCombustivel))
-                    .findFirst();
-
-            if (produtoOpt.isPresent()) {
-                produtoSelecionado = produtoOpt.get();
-                double precoUnitario = produtoSelecionado.getPrecos().get(0).getValor().doubleValue();
-
-                try {
-                    if (!litrosTextField.getText().isEmpty()) {
-                        litrosAbastecidos = Double.parseDouble(litrosTextField.getText().replace(",", "."));
-                        reaisAbastecidos = litrosAbastecidos * precoUnitario;
-                    } else if (!reaisTextField.getText().isEmpty()) {
-                        reaisAbastecidos = Double.parseDouble(reaisTextField.getText().replace(",", "."));
-                        litrosAbastecidos = reaisAbastecidos / precoUnitario;
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Preencha litros ou reais.", "Erro", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    formaPagamento = (String) pagamentoComboBox.getSelectedItem();
-                    confirmado = true;
-                    dispose();
-
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Valor inválido. Use vírgula (,) como separador decimal.", "Erro de Formato", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        okButton.addActionListener(e -> onConfirm());
     }
 
     private void carregarCombustiveis() {
-        SwingWorker<List<ProdutoDTO>, Void> worker = new SwingWorker<List<ProdutoDTO>, Void>() {
+        SwingWorker<List<ProdutoDTO>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<ProdutoDTO> doInBackground() throws Exception {
                 return produtoService.buscarTodos();
@@ -131,46 +113,133 @@ public class AbastecimentoDialog extends JDialog {
                 try {
                     produtos = get();
                     NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-
-                    List<String> combustiveisFormatados = produtos.stream()
-                            .filter(p -> p.getTipoProduto().equals("COMBUSTIVEL") && p.getPrecos() != null && !p.getPrecos().isEmpty())
-                            .map(p -> String.format("%s - %s", p.getNome(), currencyFormat.format(p.getPrecos().get(0).getValor())))
+                    List<String> items = produtos.stream()
+                            .filter(p -> "COMBUSTIVEL".equals(p.getTipoProduto()) && p.getPrecos() != null && !p.getPrecos().isEmpty())
+                            .map(p -> String.format("%s - %s/L", p.getNome(), currencyFormat.format(p.getPrecos().get(0).getValor())))
                             .collect(Collectors.toList());
-
-                    for (String combustivel : combustiveisFormatados) {
-                        combustivelComboBox.addItem(combustivel);
+                    
+                    for (String item : items) {
+                        combustivelComboBox.addItem(item);
                     }
                 } catch (InterruptedException | ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    if (cause instanceof IOException || cause instanceof ApiServiceException) {
-                        JOptionPane.showMessageDialog(AbastecimentoDialog.this, "Erro ao carregar combustíveis: " + cause.getMessage(), "Erro de API", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        e.printStackTrace();
-                        JOptionPane.showMessageDialog(AbastecimentoDialog.this, "Ocorreu um erro inesperado.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    }
+                    showError("Erro ao carregar combustíveis: " + e.getCause().getMessage());
                 }
             }
         };
         worker.execute();
     }
 
-    public boolean isConfirmado() {
-        return confirmado;
+    private void setupInputListeners() {
+        KeyAdapter listener = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                JTextField source = (JTextField) e.getSource();
+                String text = source.getText().replace(",", ".");
+                
+                Optional<ProdutoDTO> produtoOpt = getSelectedProduto();
+                if (produtoOpt.isEmpty() || text.isBlank()) {
+                    if (source == reaisTextField) litrosTextField.setText("");
+                    else reaisTextField.setText("");
+                    return;
+                }
+
+                try {
+                    double value = Double.parseDouble(text);
+                    double preco = produtoOpt.get().getPrecos().get(0).getValor().doubleValue();
+                    
+                    if (source == reaisTextField) {
+                        litrosTextField.setText(String.format(Locale.US, "%.2f", value / preco));
+                    } else { // source == litrosTextField
+                        reaisTextField.setText(String.format(Locale.US, "%.2f", value * preco));
+                    }
+                } catch (NumberFormatException ex) {
+                    // Ignora entrada inválida
+                }
+            }
+        };
+        reaisTextField.addKeyListener(listener);
+        litrosTextField.addKeyListener(listener);
     }
 
-    public ProdutoDTO getProdutoSelecionado() {
-        return produtoSelecionado;
+    private void onConfirm() {
+        Optional<ProdutoDTO> produtoOpt = getSelectedProduto();
+        if (produtoOpt.isEmpty()) {
+            showError("Selecione um combustível válido.");
+            return;
+        }
+        this.produtoSelecionado = produtoOpt.get();
+
+        try {
+            if (!litrosTextField.getText().isBlank()) {
+                litrosAbastecidos = Double.parseDouble(litrosTextField.getText().replace(",", "."));
+                reaisAbastecidos = litrosAbastecidos * produtoSelecionado.getPrecos().get(0).getValor().doubleValue();
+            } else if (!reaisTextField.getText().isBlank()) {
+                reaisAbastecidos = Double.parseDouble(reaisTextField.getText().replace(",", "."));
+                litrosAbastecidos = reaisAbastecidos / produtoSelecionado.getPrecos().get(0).getValor().doubleValue();
+            } else {
+                showError("Preencha o valor em Reais (R$) ou em Litros.");
+                return;
+            }
+
+            if (litrosAbastecidos <= 0) {
+                showError("O valor a ser abastecido deve ser positivo.");
+                return;
+            }
+
+            this.formaPagamento = (String) pagamentoComboBox.getSelectedItem();
+            this.confirmado = true;
+            dispose();
+
+        } catch (NumberFormatException ex) {
+            showError("Valor inválido. Use apenas números e vírgula/ponto como separador decimal.");
+        }
     }
 
-    public double getLitrosAbastecidos() {
-        return litrosAbastecidos;
+    private Optional<ProdutoDTO> getSelectedProduto() {
+        String itemSelecionado = (String) combustivelComboBox.getSelectedItem();
+        if (itemSelecionado == null || produtos == null) return Optional.empty();
+        String nomeCombustivel = itemSelecionado.split(" - ")[0];
+        return produtos.stream().filter(p -> p.getNome().equals(nomeCombustivel)).findFirst();
     }
 
-    public double getReaisAbastecidos() {
-        return reaisAbastecidos;
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Erro de Validação", JOptionPane.ERROR_MESSAGE);
     }
 
-    public String getFormaPagamento() {
-        return formaPagamento;
+    // Component Factory Methods
+    private JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        label.setForeground(ColorPalette.TEXT);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
     }
+
+    private JTextField createTextField(String placeholder) {
+        JTextField textField = new JTextField();
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // Placeholder text can be simulated with a FocusListener if needed
+        textField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+            new EmptyBorder(8, 8, 8, 8)
+        ));
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        return textField;
+    }
+
+    private JComboBox<String> createComboBox(String... items) {
+        JComboBox<String> comboBox = new JComboBox<>(items);
+        comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        comboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        comboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        return comboBox;
+    }
+
+    // Getters
+    public boolean isConfirmado() { return confirmado; }
+    public ProdutoDTO getProdutoSelecionado() { return produtoSelecionado; }
+    public double getLitrosAbastecidos() { return litrosAbastecidos; }
+    public double getReaisAbastecidos() { return reaisAbastecidos; }
+    public String getFormaPagamento() { return formaPagamento; }
 }

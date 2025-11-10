@@ -11,9 +11,12 @@ import br.com.ui.util.ColorPalette;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +24,8 @@ import java.util.Map;
 
 public class ContatoScreen extends JFrame {
 
-    private JTextField telefoneField, emailField, enderecoField;
+    private JTextField telefoneField, emailField, enderecoField, pessoaField;
     private JComboBox<TipoContato> tipoContatoComboBox;
-    private JTextField pessoaField;
     private JButton selecionarPessoaButton;
     private PessoaResponse pessoaSelecionada;
     private JTable tabelaContatos;
@@ -32,7 +34,7 @@ public class ContatoScreen extends JFrame {
 
     private final ContatoService contatoService;
     private final PessoaService pessoaService;
-    private Map<Long, PessoaResponse> pessoasMap;
+    private final Map<Long, PessoaResponse> pessoasMap;
 
     public ContatoScreen() {
         this.contatoService = new ContatoService();
@@ -40,55 +42,125 @@ public class ContatoScreen extends JFrame {
         this.pessoasMap = new HashMap<>();
 
         setTitle("Gerenciamento de Contatos");
-        setSize(800, 600);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
         contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setLayout(new BorderLayout(0, 0));
 
-        JPanel fieldsPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        fieldsPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
-        fieldsPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(null, "Dados do Contato", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Arial", Font.BOLD, 16), ColorPalette.PRIMARY),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        contentPane.add(createHeader("Gerenciamento de Contatos"), BorderLayout.NORTH);
 
-        fieldsPanel.add(createStyledLabel("Pessoa:", ColorPalette.TEXT));
-        JPanel pessoaPanel = new JPanel(new BorderLayout());
-        pessoaField = createStyledTextField();
-        pessoaField.setEditable(false);
-        selecionarPessoaButton = new JButton("Selecionar");
-        pessoaPanel.add(pessoaField, BorderLayout.CENTER);
-        pessoaPanel.add(selecionarPessoaButton, BorderLayout.EAST);
-        fieldsPanel.add(pessoaPanel);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createFormPanel(), createTablePanel());
+        splitPane.setDividerLocation(350);
+        splitPane.setBorder(BorderFactory.createEmptyBorder());
+        contentPane.add(splitPane, BorderLayout.CENTER);
 
-        fieldsPanel.add(createStyledLabel("Telefone:", ColorPalette.TEXT));
-        telefoneField = createStyledTextField();
-        fieldsPanel.add(telefoneField);
+        carregarMapaPessoas();
+        carregarContatos();
+    }
 
-        fieldsPanel.add(createStyledLabel("Email:", ColorPalette.TEXT));
-        emailField = createStyledTextField();
-        fieldsPanel.add(emailField);
+    private JPanel createHeader(String title) {
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
+        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setBorder(new EmptyBorder(0, 10, 0, 0));
+        headerPanel.add(titleLabel);
+        return headerPanel;
+    }
 
-        fieldsPanel.add(createStyledLabel("Endereço:", ColorPalette.TEXT));
-        enderecoField = createStyledTextField();
-        fieldsPanel.add(enderecoField);
+    private JPanel createFormPanel() {
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
-        fieldsPanel.add(createStyledLabel("Tipo de Contato:", ColorPalette.TEXT));
+        formPanel.add(createLabel("Pessoa:"));
+        formPanel.add(createPessoaSelectionPanel());
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Telefone:"));
+        telefoneField = createTextField();
+        formPanel.add(telefoneField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Email:"));
+        emailField = createTextField();
+        formPanel.add(emailField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Endereço:"));
+        enderecoField = createTextField();
+        formPanel.add(enderecoField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        formPanel.add(createLabel("Tipo de Contato:"));
         tipoContatoComboBox = new JComboBox<>(TipoContato.values());
-        fieldsPanel.add(tipoContatoComboBox);
+        tipoContatoComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tipoContatoComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        tipoContatoComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        formPanel.add(tipoContatoComboBox);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        formPanel.add(createButtonsPanel());
+        formPanel.add(Box.createVerticalGlue());
+
+        return formPanel;
+    }
+
+    private JPanel createPessoaSelectionPanel() {
+        JPanel pessoaPanel = new JPanel(new BorderLayout(5, 0));
+        pessoaPanel.setOpaque(false);
+        pessoaPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        pessoaPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        pessoaField = createTextField();
+        pessoaField.setEditable(false);
+        pessoaPanel.add(pessoaField, BorderLayout.CENTER);
+
+        selecionarPessoaButton = new JButton("...");
+        selecionarPessoaButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        selecionarPessoaButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        selecionarPessoaButton.addActionListener(e -> abrirSelecaoPessoa());
+        pessoaPanel.add(selecionarPessoaButton, BorderLayout.EAST);
+
+        return pessoaPanel;
+    }
+
+    private JPanel createButtonsPanel() {
+        JPanel buttonsPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         buttonsPanel.setOpaque(false);
-        JButton novoButton = createStyledButton("Novo", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton salvarButton = createStyledButton("Salvar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton editarButton = createStyledButton("Editar", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
-        JButton excluirButton = createStyledButton("Excluir", ColorPalette.PRIMARY, ColorPalette.WHITE_TEXT);
+        buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        JButton novoButton = createButton("Novo", ColorPalette.ACCENT_INFO, ColorPalette.WHITE_TEXT);
+        novoButton.addActionListener(e -> limparCampos());
         buttonsPanel.add(novoButton);
+
+        JButton salvarButton = createButton("Salvar", ColorPalette.ACCENT_SUCCESS, ColorPalette.WHITE_TEXT);
+        salvarButton.addActionListener(e -> salvarContato());
         buttonsPanel.add(salvarButton);
+
+        JButton editarButton = createButton("Editar", ColorPalette.ACCENT_WARNING, ColorPalette.WHITE_TEXT);
+        editarButton.addActionListener(e -> editarContato());
         buttonsPanel.add(editarButton);
+
+        JButton excluirButton = createButton("Excluir", ColorPalette.ACCENT_DANGER, ColorPalette.WHITE_TEXT);
+        excluirButton.addActionListener(e -> excluirContato());
         buttonsPanel.add(excluirButton);
+
+        return buttonsPanel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBackground(ColorPalette.BACKGROUND);
+        tablePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         String[] colunas = {"ID", "Pessoa", "Telefone", "Email", "Endereço", "Tipo"};
         tableModel = new DefaultTableModel(colunas, 0) {
@@ -99,25 +171,21 @@ public class ContatoScreen extends JFrame {
         };
         tabelaContatos = new JTable(tableModel);
         tabelaContatos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane tableScrollPane = new JScrollPane(tabelaContatos);
+        tabelaContatos.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        tabelaContatos.setRowHeight(30);
+        tabelaContatos.setGridColor(ColorPalette.BORDER_COLOR);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setOpaque(false);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        mainPanel.add(fieldsPanel, BorderLayout.NORTH);
-        mainPanel.add(tableScrollPane, BorderLayout.CENTER);
-        mainPanel.add(buttonsPanel, BorderLayout.SOUTH);
+        JTableHeader header = tabelaContatos.getTableHeader();
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setBackground(ColorPalette.PANEL_BACKGROUND);
+        header.setForeground(ColorPalette.TEXT);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
 
-        contentPane.add(mainPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(tabelaContatos);
+        scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-        selecionarPessoaButton.addActionListener(e -> abrirSelecaoPessoa());
-        novoButton.addActionListener(e -> limparCampos());
-        salvarButton.addActionListener(e -> salvarContato());
-        excluirButton.addActionListener(e -> excluirContato());
-        editarButton.addActionListener(e -> editarContato());
-
-        carregarMapaPessoas();
-        carregarContatos();
+        return tablePanel;
     }
 
     private void abrirSelecaoPessoa() {
@@ -137,10 +205,8 @@ public class ContatoScreen extends JFrame {
             for (PessoaResponse pessoa : pessoas) {
                 pessoasMap.put(pessoa.id(), pessoa);
             }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os dados das pessoas: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar as pessoas. Verifique sua conexão.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Carregar Pessoas", "Não foi possível carregar os dados das pessoas: " + e.getMessage());
         }
     }
 
@@ -149,8 +215,8 @@ public class ContatoScreen extends JFrame {
         try {
             List<ContatoResponse> contatos = contatoService.findContatos();
             for (ContatoResponse contato : contatos) {
-                PessoaResponse pessoaAssociada = pessoasMap.get(contato.pessoaId());
-                String nomePessoa = (pessoaAssociada != null) ? pessoaAssociada.nomeCompleto() : "Pessoa Desconhecida";
+                PessoaResponse pessoa = pessoasMap.get(contato.pessoaId());
+                String nomePessoa = (pessoa != null) ? pessoa.nomeCompleto() : "ID: " + contato.pessoaId();
                 tableModel.addRow(new Object[]{
                         contato.id(),
                         nomePessoa,
@@ -160,10 +226,8 @@ public class ContatoScreen extends JFrame {
                         contato.tipoContato()
                 });
             }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os contatos: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os contatos. Verifique sua conexão.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Carregar Contatos", "Não foi possível carregar os contatos: " + e.getMessage());
         }
     }
 
@@ -173,7 +237,6 @@ public class ContatoScreen extends JFrame {
                 showErrorDialog("Validação", "É necessário selecionar uma pessoa.");
                 return;
             }
-
             ContatoRequest request = new ContatoRequest(
                     telefoneField.getText(),
                     emailField.getText(),
@@ -192,66 +255,48 @@ public class ContatoScreen extends JFrame {
             carregarContatos();
             limparCampos();
 
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível salvar o contato: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para salvar o contato. Verifique sua conexão.");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro de Salvamento", "Não foi possível salvar o contato: " + e.getMessage());
         }
     }
 
     private void editarContato() {
         int selectedRow = tabelaContatos.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um contato para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um contato na tabela para editar.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         contatoIdEmEdicao = (Long) tableModel.getValueAt(selectedRow, 0);
         try {
-            ContatoResponse contatoParaEditar = contatoService.findContatoById(contatoIdEmEdicao);
-            if (contatoParaEditar != null) {
-                telefoneField.setText(contatoParaEditar.telefone());
-                emailField.setText(contatoParaEditar.email());
-                enderecoField.setText(contatoParaEditar.endereco());
-                tipoContatoComboBox.setSelectedItem(contatoParaEditar.tipoContato());
-
-                PessoaResponse pessoaAssociada = pessoasMap.get(contatoParaEditar.pessoaId());
-                if (pessoaAssociada != null) {
-                    this.pessoaSelecionada = pessoaAssociada;
-                    pessoaField.setText(pessoaAssociada.nomeCompleto());
-                } else {
-                    this.pessoaSelecionada = null;
-                    pessoaField.setText("Pessoa não encontrada");
-                }
-                JOptionPane.showMessageDialog(this, "Campos preenchidos para edição. Altere os dados e clique em Salvar.", "Informação", JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (ApiServiceException e) {
-            showErrorDialog("Erro de API", "Não foi possível carregar os dados do contato para edição: " + e.getMessage());
-        } catch (IOException e) {
-            showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para buscar os dados do contato. Verifique sua conexão.");
+            ContatoResponse contato = contatoService.findContatoById(contatoIdEmEdicao);
+            telefoneField.setText(contato.telefone());
+            emailField.setText(contato.email());
+            enderecoField.setText(contato.endereco());
+            tipoContatoComboBox.setSelectedItem(contato.tipoContato());
+            pessoaSelecionada = pessoasMap.get(contato.pessoaId());
+            pessoaField.setText(pessoaSelecionada != null ? pessoaSelecionada.nomeCompleto() : "");
+        } catch (ApiServiceException | IOException e) {
+            showErrorDialog("Erro ao Editar", "Não foi possível carregar os dados do contato: " + e.getMessage());
         }
     }
 
     private void excluirContato() {
         int selectedRow = tabelaContatos.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Selecione um contato para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um contato na tabela para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Long id = (Long) tabelaContatos.getValueAt(selectedRow, 0);
-
-        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o contato selecionado?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+        Long id = (Long) tableModel.getValueAt(selectedRow, 0);
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir este contato?", "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 contatoService.deleteContato(id);
-                JOptionPane.showMessageDialog(this, "Contato excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 carregarContatos();
                 limparCampos();
-            } catch (ApiServiceException e) {
-                showErrorDialog("Erro de API", "Não foi possível excluir o contato: " + e.getMessage());
-            } catch (IOException e) {
-                showErrorDialog("Erro de Conexão", "Não foi possível conectar ao servidor para excluir o contato. Verifique sua conexão.");
+            } catch (ApiServiceException | IOException e) {
+                showErrorDialog("Erro ao Excluir", "Não foi possível excluir o contato: " + e.getMessage());
             }
         }
     }
@@ -271,40 +316,58 @@ public class ContatoScreen extends JFrame {
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
-    private JLabel createStyledLabel(String text, Color color) {
+    // Component Creation Methods
+    private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(color);
-        label.setFont(new Font("Arial", Font.BOLD, 14));
+        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        label.setForeground(ColorPalette.TEXT);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
 
-    private JTextField createStyledTextField() {
-        JTextField textField = new JTextField(15);
-        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+    private JTextField createTextField() {
+        JTextField textField = new JTextField();
+        textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         textField.setBackground(ColorPalette.PANEL_BACKGROUND);
         textField.setForeground(ColorPalette.TEXT);
-        textField.setCaretColor(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+                new EmptyBorder(8, 8, 8, 8)
         ));
+        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         return textField;
     }
 
-    private JButton createStyledButton(String text, Color background, Color foreground) {
+    private JButton createButton(String text, Color background, Color foreground) {
         JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
         button.setBackground(background);
         button.setForeground(foreground);
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(background.darker());
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(background);
+            }
+        });
+
         return button;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            FlatLightLaf.setup();
+            try {
+                UIManager.setLookAndFeel(new FlatLightLaf());
+            } catch (UnsupportedLookAndFeelException e) {
+                e.printStackTrace();
+            }
             new ContatoScreen().setVisible(true);
         });
     }

@@ -2,9 +2,9 @@ package br.com.api.dto;
 
 public enum TipoAcesso {
 
-    ADMINISTRADOR("Acesso Administrador"),
-    FUNCIONARIO("Acesso Funcionário"),
-    GERENCIA("Acesso Gerência");
+    admin("Acesso Administrador"),
+    func("Acesso Funcionário"),
+    ger("Acesso Gerência");
 
     private  final String descricao;
 
