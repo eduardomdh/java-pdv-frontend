@@ -52,7 +52,7 @@ public class EstoqueScreen extends JFrame {
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setBackground(ColorPalette.TEXT); // Fundo escuro
         contentPane.setLayout(new BorderLayout(0, 0));
 
         contentPane.add(createHeader("Gerenciamento de Estoque"), BorderLayout.NORTH);
@@ -60,6 +60,7 @@ public class EstoqueScreen extends JFrame {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createFormPanel(), createTablePanel());
         splitPane.setDividerLocation(380);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
+        splitPane.setBackground(ColorPalette.TEXT); // Fundo escuro para o splitPane
         contentPane.add(splitPane, BorderLayout.CENTER);
 
         carregarMapaProdutos();
@@ -68,12 +69,12 @@ public class EstoqueScreen extends JFrame {
 
     private JPanel createHeader(String title) {
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBackground(ColorPalette.TEXT_MUTED); // Cor mais escura para o cabeçalho
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
         headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         titleLabel.setBorder(new EmptyBorder(0, 10, 0, 0));
         headerPanel.add(titleLabel);
         return headerPanel;
@@ -82,7 +83,7 @@ public class EstoqueScreen extends JFrame {
     private JPanel createFormPanel() {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        formPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         formPanel.add(createLabel("Produto:"));
@@ -119,6 +120,8 @@ public class EstoqueScreen extends JFrame {
         tipoEstoqueComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tipoEstoqueComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         tipoEstoqueComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        tipoEstoqueComboBox.setBackground(ColorPalette.PANEL_BACKGROUND); // Mantém o fundo claro para contraste
+        tipoEstoqueComboBox.setForeground(ColorPalette.TEXT); // Texto escuro
         formPanel.add(tipoEstoqueComboBox);
         formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
@@ -138,9 +141,7 @@ public class EstoqueScreen extends JFrame {
         produtoField.setEditable(false);
         produtoPanel.add(produtoField, BorderLayout.CENTER);
 
-        selecionarProdutoButton = new JButton("...");
-        selecionarProdutoButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        selecionarProdutoButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        selecionarProdutoButton = createButton("...");
         selecionarProdutoButton.addActionListener(e -> abrirSelecaoProduto());
         produtoPanel.add(selecionarProdutoButton, BorderLayout.EAST);
 
@@ -153,19 +154,19 @@ public class EstoqueScreen extends JFrame {
         buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-        JButton novoButton = createButton("Novo", ColorPalette.ACCENT_INFO, ColorPalette.WHITE_TEXT);
+        JButton novoButton = createButton("Novo");
         novoButton.addActionListener(e -> limparCampos());
         buttonsPanel.add(novoButton);
 
-        JButton salvarButton = createButton("Salvar", ColorPalette.ACCENT_SUCCESS, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createButton("Salvar");
         salvarButton.addActionListener(e -> salvarEstoque());
         buttonsPanel.add(salvarButton);
 
-        JButton editarButton = createButton("Editar", ColorPalette.ACCENT_WARNING, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createButton("Editar");
         editarButton.addActionListener(e -> editarEstoque());
         buttonsPanel.add(editarButton);
 
-        JButton excluirButton = createButton("Excluir", ColorPalette.ACCENT_DANGER, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createButton("Excluir");
         excluirButton.addActionListener(e -> excluirEstoque());
         buttonsPanel.add(excluirButton);
 
@@ -174,7 +175,7 @@ public class EstoqueScreen extends JFrame {
 
     private JPanel createTablePanel() {
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(ColorPalette.BACKGROUND);
+        tablePanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         tablePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         String[] colunas = {"ID", "Produto", "Qtd.", "Tanque", "Endereço", "Lote", "Validade", "Tipo"};
@@ -189,15 +190,19 @@ public class EstoqueScreen extends JFrame {
         tabelaEstoque.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tabelaEstoque.setRowHeight(30);
         tabelaEstoque.setGridColor(ColorPalette.BORDER_COLOR);
+        tabelaEstoque.setBackground(ColorPalette.TEXT); // Fundo escuro da tabela
+        tabelaEstoque.setForeground(ColorPalette.WHITE_TEXT); // Texto branco da tabela
 
         JTableHeader header = tabelaEstoque.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(ColorPalette.PANEL_BACKGROUND);
-        header.setForeground(ColorPalette.TEXT);
+        header.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro do cabeçalho da tabela
+        header.setForeground(ColorPalette.WHITE_TEXT); // Texto branco do cabeçalho da tabela
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
 
         JScrollPane scrollPane = new JScrollPane(tabelaEstoque);
         scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        scrollPane.setBackground(ColorPalette.TEXT); // Fundo escuro do scrollPane
+        scrollPane.getViewport().setBackground(ColorPalette.TEXT); // Fundo escuro do viewport do scrollPane
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
         return tablePanel;
@@ -298,7 +303,7 @@ public class EstoqueScreen extends JFrame {
             EstoqueResponse estoque = estoqueService.findEstoqueById(estoqueIdEmEdicao);
             quantidadeField.setText(String.valueOf(estoque.quantidade()).replace('.', ','));
             localTanqueField.setText(estoque.localTanque());
-            localEnderecoField.setText(estoque.localEndereco());
+            localEnderecoField.setText(estoque.localEndereco()); // Corrigido aqui
             loteFabricacaoField.setText(estoque.loteFabricacao());
             dataValidadeField.setText(estoque.dataValidade().format(dateFormatter));
             tipoEstoqueComboBox.setSelectedItem(estoque.tipoEstoque());
@@ -350,7 +355,7 @@ public class EstoqueScreen extends JFrame {
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(ColorPalette.TEXT);
+        label.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
@@ -358,8 +363,8 @@ public class EstoqueScreen extends JFrame {
     private JTextField createTextField() {
         JTextField textField = new JTextField();
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
-        textField.setForeground(ColorPalette.TEXT);
+        textField.setBackground(ColorPalette.PANEL_BACKGROUND); // Mantém o fundo claro para contraste
+        textField.setForeground(ColorPalette.TEXT); // Texto escuro
         textField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
                 new EmptyBorder(8, 8, 8, 8)
@@ -369,22 +374,22 @@ public class EstoqueScreen extends JFrame {
         return textField;
     }
 
-    private JButton createButton(String text, Color background, Color foreground) {
+    private JButton createButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(background);
-        button.setForeground(foreground);
+        button.setBackground(ColorPalette.PRIMARY); // Cor azul
+        button.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         button.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(background.darker());
+                button.setBackground(ColorPalette.PRIMARY_DARK); // Cor azul mais escura ao passar o mouse
             }
 
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(background);
+                button.setBackground(ColorPalette.PRIMARY); // Cor azul normal
             }
         });
 

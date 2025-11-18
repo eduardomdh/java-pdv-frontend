@@ -3,6 +3,7 @@ package br.com.ui.view;
 import br.com.auth.dto.LoginResponse;
 import br.com.auth.service.AuthService;
 import br.com.common.service.ApiServiceException;
+import br.com.ui.component.RoundedButton;
 import br.com.ui.util.ColorPalette;
 import br.com.acesso.enums.TipoAcesso;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -10,14 +11,12 @@ import com.formdev.flatlaf.FlatLightLaf;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class LoginScreen extends JFrame {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
-    private JButton loginButton;
+    private RoundedButton loginButton;
     private final AuthService authService;
 
     public LoginScreen() {
@@ -28,51 +27,76 @@ public class LoginScreen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
-        
-        Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.BACKGROUND);
-        contentPane.setLayout(new BorderLayout());
 
-        // Header com o título
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        headerPanel.setBackground(ColorPalette.BACKGROUND);
-        headerPanel.setBorder(new EmptyBorder(40, 20, 20, 20));
+        Container contentPane = getContentPane();
+        contentPane.setBackground(ColorPalette.TEXT);
+        contentPane.setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 20, 5, 20);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Título
         JLabel titleLabel = new JLabel("Bem-vindo de volta!");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        titleLabel.setForeground(ColorPalette.TEXT);
-        headerPanel.add(titleLabel);
-        contentPane.add(headerPanel, BorderLayout.NORTH);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weighty = 0.1;
+        contentPane.add(titleLabel, gbc);
 
-        // Painel do formulário
-        JPanel formPanel = new JPanel();
-        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBackground(ColorPalette.BACKGROUND);
-        formPanel.setBorder(new EmptyBorder(20, 40, 20, 40));
+        // Label do usuário
+        JLabel userLabel = createLabel("Usuário");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.weighty = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        contentPane.add(userLabel, gbc);
 
-        formPanel.add(createLabel("Usuário"));
+        // Campo de usuário
         usernameField = createTextField();
-        formPanel.add(usernameField);
-        formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        contentPane.add(usernameField, gbc);
 
-        formPanel.add(createLabel("Senha"));
+        // Label da senha
+        JLabel passLabel = createLabel("Senha");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        contentPane.add(passLabel, gbc);
+
+        // Campo de senha
         passwordField = createPasswordField();
-        formPanel.add(passwordField);
-        formPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        contentPane.add(passwordField, gbc);
 
+        // Botão de entrar
         loginButton = createButton("Entrar");
-        formPanel.add(loginButton);
-        
-        contentPane.add(formPanel, BorderLayout.CENTER);
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(20, 20, 5, 20);
+        contentPane.add(loginButton, gbc);
 
         // Rodapé
-        JPanel footerPanel = new JPanel();
-        footerPanel.setBackground(ColorPalette.BACKGROUND);
-        footerPanel.setBorder(new EmptyBorder(0, 0, 20, 0));
         JLabel footerLabel = new JLabel("© 2024 PDV Posto de Combustível");
         footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         footerLabel.setForeground(ColorPalette.TEXT_MUTED);
-        footerPanel.add(footerLabel);
-        contentPane.add(footerPanel, BorderLayout.SOUTH);
+        footerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        gbc.weighty = 0.1;
+        gbc.anchor = GridBagConstraints.PAGE_END;
+        contentPane.add(footerLabel, gbc);
+
 
         loginButton.addActionListener(e -> authenticateUser());
     }
@@ -103,59 +127,44 @@ public class LoginScreen extends JFrame {
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(ColorPalette.TEXT);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setForeground(ColorPalette.WHITE_TEXT);
         return label;
     }
 
     private JTextField createTextField() {
-        JTextField textField = new JTextField();
+        JTextField textField = new JTextField(20);
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         textField.setBackground(ColorPalette.PANEL_BACKGROUND);
         textField.setForeground(ColorPalette.TEXT);
         textField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
-            new EmptyBorder(10, 10, 10, 10)
+                BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+                new EmptyBorder(10, 10, 10, 10)
         ));
-        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        textField.setAlignmentX(Component.LEFT_ALIGNMENT);
         return textField;
     }
 
     private JPasswordField createPasswordField() {
-        JPasswordField passwordField = new JPasswordField();
+        JPasswordField passwordField = new JPasswordField(20);
         passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         passwordField.setBackground(ColorPalette.PANEL_BACKGROUND);
         passwordField.setForeground(ColorPalette.TEXT);
         passwordField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
-            new EmptyBorder(10, 10, 10, 10)
+                BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
+                new EmptyBorder(10, 10, 10, 10)
         ));
-        passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        passwordField.setAlignmentX(Component.LEFT_ALIGNMENT);
         return passwordField;
     }
 
-    private JButton createButton(String text) {
-        JButton button = new JButton(text);
+    private RoundedButton createButton(String text) {
+        RoundedButton button = new RoundedButton(text);
         button.setFont(new Font("Segoe UI", Font.BOLD, 16));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setFocusPainted(false);
         button.setBackground(ColorPalette.PRIMARY);
         button.setForeground(ColorPalette.WHITE_TEXT);
-        button.setBorder(new EmptyBorder(12, 20, 12, 20));
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        button.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent evt) {
-                button.setBackground(ColorPalette.PRIMARY_DARK);
-            }
-
-            public void mouseExited(MouseEvent evt) {
-                button.setBackground(ColorPalette.PRIMARY);
-            }
-        });
+        button.setHoverBackgroundColor(ColorPalette.PRIMARY_DARK);
+        button.setPressedBackgroundColor(ColorPalette.PRIMARY_DARK.darker());
+        button.setCornerRadius(30);
+        button.setPreferredSize(new Dimension(100, 40));
 
         return button;
     }

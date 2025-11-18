@@ -35,7 +35,7 @@ public class AbastecimentoScreen extends JFrame {
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setBackground(ColorPalette.TEXT); // Fundo escuro
         contentPane.setLayout(new BorderLayout(0, 0));
 
         // Header
@@ -44,11 +44,12 @@ public class AbastecimentoScreen extends JFrame {
 
         // Painel de Bombas
         pumpsPanel = new JPanel(new GridLayout(0, 3, 20, 20));
-        pumpsPanel.setOpaque(false);
+        pumpsPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         pumpsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         JScrollPane scrollPane = new JScrollPane(pumpsPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setBackground(ColorPalette.BACKGROUND);
+        scrollPane.setBackground(ColorPalette.TEXT); // Fundo escuro
+        scrollPane.getViewport().setBackground(ColorPalette.TEXT); // Fundo escuro do viewport
         contentPane.add(scrollPane, BorderLayout.CENTER);
 
         carregarBombas();
@@ -56,13 +57,13 @@ public class AbastecimentoScreen extends JFrame {
 
     private JPanel createHeader() {
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBackground(ColorPalette.TEXT_MUTED); // Cor mais escura para o cabeçalho
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
         headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
 
         JLabel titleLabel = new JLabel("Central de Abastecimento");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         titleLabel.setBorder(new EmptyBorder(0, 20, 0, 0));
         headerPanel.add(titleLabel, BorderLayout.CENTER);
 
@@ -70,7 +71,7 @@ public class AbastecimentoScreen extends JFrame {
         userPanel.setOpaque(false);
         JLabel userLabel = new JLabel("Operador: " + loggedInUsername);
         userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        userLabel.setForeground(ColorPalette.TEXT_MUTED);
+        userLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         userPanel.add(userLabel);
 
         JButton logoutButton = new JButton("Sair");
@@ -111,6 +112,7 @@ public class AbastecimentoScreen extends JFrame {
                         JLabel noPumpsLabel = new JLabel("Nenhuma bomba encontrada.");
                         noPumpsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
                         noPumpsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                        noPumpsLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
                         pumpsPanel.setLayout(new BorderLayout());
                         pumpsPanel.add(noPumpsLabel, BorderLayout.CENTER);
                     }
@@ -126,16 +128,20 @@ public class AbastecimentoScreen extends JFrame {
 
     private JPanel createPumpCard(BombaDTO bomba) {
         JPanel cardPanel = new JPanel(new BorderLayout(10, 10));
-        cardPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        cardPanel.setBackground(ColorPalette.PANEL_BACKGROUND); // Mantém o fundo claro para contraste
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
                 new EmptyBorder(20, 20, 20, 20)
         ));
 
         // Título da Bomba
-        JLabel titleLabel = new JLabel(bomba.getNome(), SwingConstants.CENTER);
+        String bombaNome = bomba.getNome();
+        if (bombaNome != null && bombaNome.matches("B[1-3]")) { // Verifica se é B1, B2 ou B3
+            bombaNome = "Bomba " + bombaNome.substring(1); // Transforma em Bomba 1, Bomba 2, etc.
+        }
+        JLabel titleLabel = new JLabel(bombaNome, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setForeground(ColorPalette.TEXT); // Texto escuro para contraste com o fundo claro do card
         cardPanel.add(titleLabel, BorderLayout.NORTH);
 
         // Status da Bomba
@@ -143,6 +149,7 @@ public class AbastecimentoScreen extends JFrame {
         statusPanel.setOpaque(false);
         JLabel statusLabel = new JLabel("Status:");
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        statusLabel.setForeground(ColorPalette.TEXT); // Texto escuro
         JLabel statusValue = new JLabel(bomba.getStatus());
         statusValue.setFont(new Font("Segoe UI", Font.BOLD, 16));
         

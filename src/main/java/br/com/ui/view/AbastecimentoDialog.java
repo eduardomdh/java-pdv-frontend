@@ -11,6 +11,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
@@ -43,20 +45,20 @@ public class AbastecimentoDialog extends JDialog {
         setResizable(false);
         
         Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.PANEL_BACKGROUND);
+        contentPane.setBackground(ColorPalette.TEXT); // Fundo escuro
         contentPane.setLayout(new BorderLayout());
         ((JPanel) contentPane).setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // Título
         JLabel titleLabel = new JLabel("Configurar Abastecimento", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         titleLabel.setBorder(new EmptyBorder(0, 0, 20, 0));
         contentPane.add(titleLabel, BorderLayout.NORTH);
 
         // Formulário
         JPanel formPanel = new JPanel();
-        formPanel.setOpaque(false);
+        formPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         
         formPanel.add(createLabel("Combustível:"));
@@ -66,7 +68,7 @@ public class AbastecimentoDialog extends JDialog {
 
         formPanel.add(createLabel("Valor a abastecer (R$) ou Litros:"));
         JPanel inputPanel = new JPanel(new GridLayout(1, 2, 10, 0));
-        inputPanel.setOpaque(false);
+        inputPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         reaisTextField = createTextField("R$");
         litrosTextField = createTextField("Litros");
         inputPanel.add(reaisTextField);
@@ -82,23 +84,33 @@ public class AbastecimentoDialog extends JDialog {
 
         // Botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setOpaque(false);
+        buttonPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         buttonPanel.setBorder(new EmptyBorder(20, 0, 0, 0));
-        JButton cancelButton = new JButton("Cancelar");
-        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        
+        JButton cancelButton = createButton("Cancelar");
         cancelButton.addActionListener(e -> dispose());
-        JButton okButton = new JButton("Confirmar");
-        okButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        okButton.setBackground(ColorPalette.PRIMARY);
-        okButton.setForeground(ColorPalette.WHITE_TEXT);
         buttonPanel.add(cancelButton);
+        
+        JButton okButton = createButton("Confirmar");
+        okButton.addActionListener(e -> onConfirm());
         buttonPanel.add(okButton);
+        
         contentPane.add(buttonPanel, BorderLayout.SOUTH);
 
         carregarCombustiveis();
         setupInputListeners();
+    }
 
-        okButton.addActionListener(e -> onConfirm());
+    private Optional<ProdutoDTO> getSelectedProduto() {
+        String selectedItem = (String) combustivelComboBox.getSelectedItem();
+        if (selectedItem == null || produtos == null) {
+            return Optional.empty();
+        }
+        // O formato é "Nome do Produto - R$X.XX/L"
+        String productName = selectedItem.split(" - ")[0];
+        return produtos.stream()
+                .filter(p -> p.getNome().equals(productName))
+                .findFirst();
     }
 
     private void carregarCombustiveis() {
@@ -195,13 +207,6 @@ public class AbastecimentoDialog extends JDialog {
         }
     }
 
-    private Optional<ProdutoDTO> getSelectedProduto() {
-        String itemSelecionado = (String) combustivelComboBox.getSelectedItem();
-        if (itemSelecionado == null || produtos == null) return Optional.empty();
-        String nomeCombustivel = itemSelecionado.split(" - ")[0];
-        return produtos.stream().filter(p -> p.getNome().equals(nomeCombustivel)).findFirst();
-    }
-
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Erro de Validação", JOptionPane.ERROR_MESSAGE);
     }
@@ -210,7 +215,7 @@ public class AbastecimentoDialog extends JDialog {
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(ColorPalette.TEXT);
+        label.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
@@ -218,7 +223,8 @@ public class AbastecimentoDialog extends JDialog {
     private JTextField createTextField(String placeholder) {
         JTextField textField = new JTextField();
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        // Placeholder text can be simulated with a FocusListener if needed
+        textField.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro para contraste
+        textField.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         textField.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
             new EmptyBorder(8, 8, 8, 8)
@@ -233,7 +239,31 @@ public class AbastecimentoDialog extends JDialog {
         comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         comboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         comboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        comboBox.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro para contraste
+        comboBox.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         return comboBox;
+    }
+
+    private JButton createButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setFocusPainted(false);
+        button.setBackground(ColorPalette.PRIMARY); // Cor azul
+        button.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
+        button.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(ColorPalette.PRIMARY_DARK); // Cor azul mais escura ao passar o mouse
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(ColorPalette.PRIMARY); // Cor azul normal
+            }
+        });
+
+        return button;
     }
 
     // Getters

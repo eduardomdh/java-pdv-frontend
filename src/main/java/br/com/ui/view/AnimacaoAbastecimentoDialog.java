@@ -27,23 +27,29 @@ public class AnimacaoAbastecimentoDialog extends JDialog {
         setResizable(false);
         
         Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.PANEL_BACKGROUND);
+        contentPane.setBackground(ColorPalette.TEXT); // Fundo escuro
         contentPane.setLayout(new BorderLayout(10, 10));
         ((JPanel) contentPane).setBorder(new EmptyBorder(20, 20, 20, 20));
 
         // Título
-        JLabel titleLabel = new JLabel("Abastecendo Bomba " + bomba.getNome(), SwingConstants.CENTER);
+        String bombaNome = bomba.getNome();
+        if (bombaNome != null && bombaNome.matches("B[1-3]")) { // Verifica se é B1, B2 ou B3
+            bombaNome = "Bomba " + bombaNome.substring(1); // Transforma em Bomba 1, Bomba 2, etc.
+        }
+        JLabel titleLabel = new JLabel("Abastecendo " + bombaNome, SwingConstants.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         contentPane.add(titleLabel, BorderLayout.NORTH);
 
         // Painel de informações
         JPanel infoPanel = new JPanel(new GridLayout(2, 1, 5, 5));
-        infoPanel.setOpaque(false);
+        infoPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         litrosLabel = new JLabel("Litros: 0.00");
         litrosLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        litrosLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         reaisLabel = new JLabel("Reais: R$ 0.00");
         reaisLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        reaisLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         infoPanel.add(litrosLabel);
         infoPanel.add(reaisLabel);
         contentPane.add(infoPanel, BorderLayout.CENTER);
@@ -53,7 +59,7 @@ public class AnimacaoAbastecimentoDialog extends JDialog {
         progressBar.setStringPainted(true);
         progressBar.setFont(new Font("Segoe UI", Font.BOLD, 14));
         progressBar.setForeground(ColorPalette.PRIMARY);
-        progressBar.setBackground(ColorPalette.BACKGROUND);
+        progressBar.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro
         contentPane.add(progressBar, BorderLayout.SOUTH);
 
         startAnimation(bomba, litros, reais);

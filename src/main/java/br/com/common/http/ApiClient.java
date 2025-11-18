@@ -6,7 +6,7 @@ import br.com.common.service.LocalDateTimeAdapter;
 import br.com.common.session.SessionManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonSyntaxException;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -64,7 +64,7 @@ public class ApiClient {
 
         if (body != null) {
             String jsonBody = gson.toJson(body);
-            RequestBody requestBody = RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-8"));
+            RequestBody requestBody = RequestBody.create(jsonBody, MediaType.get("application/json; charset=utf-t"));
             builder.method(method, requestBody);
         } else {
             builder.method(method, null);
@@ -83,7 +83,15 @@ public class ApiClient {
             if (responseBody.isEmpty() && responseType == Void.class) {
                 return null;
             }
-            return gson.fromJson(responseBody, responseType);
+
+            try {
+                return gson.fromJson(responseBody, responseType);
+            } catch (JsonSyntaxException e) {
+                if (responseType == String.class) {
+                    return (T) responseBody;
+                }
+                throw e;
+            }
         }
     }
 

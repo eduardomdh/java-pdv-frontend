@@ -38,36 +38,41 @@ public class GerenciamentoAcessoScreen extends JFrame {
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setBackground(ColorPalette.TEXT); // Fundo escuro
         contentPane.setLayout(new BorderLayout(0, 0));
+        ((JComponent) contentPane).setBorder(null); // Garante que não há bordas no contentPane
 
         contentPane.add(createHeader("Gerenciamento de Acesso de Usuários"), BorderLayout.NORTH);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createFormPanel(), createTablePanel());
         splitPane.setDividerLocation(350);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
+        splitPane.setBackground(ColorPalette.TEXT); // Fundo escuro para o splitPane
         contentPane.add(splitPane, BorderLayout.CENTER);
 
         carregarAcessos();
     }
 
     private JPanel createHeader(String title) {
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
-        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
-        headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
+        JPanel headerPanel = new JPanel(new BorderLayout()); // Alterado para BorderLayout
+        headerPanel.setBackground(ColorPalette.PRIMARY_DARK); // Cor mais escura para o cabeçalho
+        headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR)); // Borda inferior
+        // Removido setPreferredSize para que o BorderLayout gerencie a altura com base no conteúdo
+
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(ColorPalette.TEXT);
-        titleLabel.setBorder(new EmptyBorder(0, 10, 0, 0));
-        headerPanel.add(titleLabel);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24)); // Aumenta o tamanho da fonte
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
+        titleLabel.setBorder(new EmptyBorder(15, 20, 15, 0)); // Padding interno para o texto (ajustado)
+        titleLabel.setVerticalAlignment(SwingConstants.CENTER); // Alinha o texto ao centro verticalmente
+        titleLabel.setHorizontalAlignment(SwingConstants.LEFT); // Alinha o texto à esquerda
+        headerPanel.add(titleLabel, BorderLayout.WEST); // Adicionado ao WEST do BorderLayout
         return headerPanel;
     }
 
     private JPanel createFormPanel() {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        formPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         formPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         formPanel.add(createLabel("Login (Usuário):"));
@@ -85,6 +90,8 @@ public class GerenciamentoAcessoScreen extends JFrame {
         tipoAcessoComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tipoAcessoComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         tipoAcessoComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        tipoAcessoComboBox.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro para o combobox
+        tipoAcessoComboBox.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         formPanel.add(tipoAcessoComboBox);
         formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
@@ -100,19 +107,19 @@ public class GerenciamentoAcessoScreen extends JFrame {
         buttonsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         buttonsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
-        JButton novoButton = createButton("Novo", ColorPalette.ACCENT_INFO, ColorPalette.WHITE_TEXT);
+        JButton novoButton = createButton("Novo");
         novoButton.addActionListener(e -> limparCampos());
         buttonsPanel.add(novoButton);
 
-        JButton salvarButton = createButton("Salvar", ColorPalette.ACCENT_SUCCESS, ColorPalette.WHITE_TEXT);
+        JButton salvarButton = createButton("Salvar");
         salvarButton.addActionListener(e -> salvarAcesso());
         buttonsPanel.add(salvarButton);
 
-        JButton editarButton = createButton("Editar", ColorPalette.ACCENT_WARNING, ColorPalette.WHITE_TEXT);
+        JButton editarButton = createButton("Editar");
         editarButton.addActionListener(e -> editarAcesso());
         buttonsPanel.add(editarButton);
 
-        JButton excluirButton = createButton("Excluir", ColorPalette.ACCENT_DANGER, ColorPalette.WHITE_TEXT);
+        JButton excluirButton = createButton("Excluir");
         excluirButton.addActionListener(e -> excluirAcesso());
         buttonsPanel.add(excluirButton);
 
@@ -121,7 +128,7 @@ public class GerenciamentoAcessoScreen extends JFrame {
 
     private JPanel createTablePanel() {
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBackground(ColorPalette.BACKGROUND);
+        tablePanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         tablePanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         String[] colunas = {"ID", "Login", "Tipo de Acesso"};
@@ -136,15 +143,19 @@ public class GerenciamentoAcessoScreen extends JFrame {
         tabelaUsuarios.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tabelaUsuarios.setRowHeight(30);
         tabelaUsuarios.setGridColor(ColorPalette.BORDER_COLOR);
+        tabelaUsuarios.setBackground(ColorPalette.TEXT); // Fundo escuro da tabela
+        tabelaUsuarios.setForeground(ColorPalette.WHITE_TEXT); // Texto branco da tabela
 
         JTableHeader header = tabelaUsuarios.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(ColorPalette.PANEL_BACKGROUND);
-        header.setForeground(ColorPalette.TEXT);
+        header.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro do cabeçalho da tabela
+        header.setForeground(ColorPalette.WHITE_TEXT); // Texto branco do cabeçalho da tabela
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
 
         JScrollPane scrollPane = new JScrollPane(tabelaUsuarios);
         scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        scrollPane.setBackground(ColorPalette.TEXT); // Fundo escuro do scrollPane
+        scrollPane.getViewport().setBackground(ColorPalette.TEXT); // Fundo escuro do viewport do scrollPane
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
         return tablePanel;
@@ -239,7 +250,7 @@ public class GerenciamentoAcessoScreen extends JFrame {
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(ColorPalette.TEXT);
+        label.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
     }
@@ -247,8 +258,8 @@ public class GerenciamentoAcessoScreen extends JFrame {
     private JTextField createTextField() {
         JTextField textField = new JTextField();
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        textField.setBackground(ColorPalette.PANEL_BACKGROUND);
-        textField.setForeground(ColorPalette.TEXT);
+        textField.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro para contraste
+        textField.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         textField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
                 new EmptyBorder(8, 8, 8, 8)
@@ -261,8 +272,8 @@ public class GerenciamentoAcessoScreen extends JFrame {
     private JPasswordField createPasswordField() {
         JPasswordField passwordField = new JPasswordField();
         passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        passwordField.setBackground(ColorPalette.PANEL_BACKGROUND);
-        passwordField.setForeground(ColorPalette.TEXT);
+        passwordField.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro para contraste
+        passwordField.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         passwordField.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 1, 1, 1, ColorPalette.BORDER_COLOR),
                 new EmptyBorder(8, 8, 8, 8)
@@ -272,22 +283,22 @@ public class GerenciamentoAcessoScreen extends JFrame {
         return passwordField;
     }
 
-    private JButton createButton(String text, Color background, Color foreground) {
+    private JButton createButton(String text) {
         JButton button = new JButton(text);
         button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(background);
-        button.setForeground(foreground);
+        button.setBackground(ColorPalette.PRIMARY); // Cor azul
+        button.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         button.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(background.darker());
+                button.setBackground(ColorPalette.PRIMARY_DARK); // Cor azul mais escura ao passar o mouse
             }
 
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(background);
+                button.setBackground(ColorPalette.PRIMARY); // Cor azul normal
             }
         });
 

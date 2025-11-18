@@ -10,6 +10,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class SelecaoClienteScreen extends JDialog {
@@ -30,7 +32,7 @@ public class SelecaoClienteScreen extends JDialog {
         setSize(800, 600);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout(0, 0));
-        getContentPane().setBackground(ColorPalette.BACKGROUND);
+        getContentPane().setBackground(ColorPalette.TEXT); // Fundo escuro
 
         // Header
         add(createHeader(), BorderLayout.NORTH);
@@ -46,15 +48,18 @@ public class SelecaoClienteScreen extends JDialog {
 
     private JPanel createHeader() {
         JPanel headerPanel = new JPanel(new BorderLayout(10, 10));
-        headerPanel.setOpaque(false);
+        headerPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         headerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JLabel titleLabel = new JLabel("Selecione um Cliente");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         searchField = new JTextField();
         searchField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        searchField.setBackground(ColorPalette.PANEL_BACKGROUND); // Fundo claro para contraste
+        searchField.setForeground(ColorPalette.TEXT); // Texto escuro
         searchField.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 filterTable();
@@ -67,7 +72,7 @@ public class SelecaoClienteScreen extends JDialog {
 
     private JPanel createTablePanel() {
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setOpaque(false);
+        tablePanel.setBackground(ColorPalette.TEXT); // Fundo escuro
         tablePanel.setBorder(new EmptyBorder(0, 10, 10, 10));
 
         String[] colunas = {"ID", "Nome", "CPF/CNPJ"};
@@ -82,14 +87,18 @@ public class SelecaoClienteScreen extends JDialog {
         tabelaClientes.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tabelaClientes.setRowHeight(30);
         tabelaClientes.setGridColor(ColorPalette.BORDER_COLOR);
+        tabelaClientes.setBackground(ColorPalette.TEXT); // Fundo escuro da tabela
+        tabelaClientes.setForeground(ColorPalette.WHITE_TEXT); // Texto branco da tabela
 
         JTableHeader header = tabelaClientes.getTableHeader();
         header.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        header.setBackground(ColorPalette.PANEL_BACKGROUND);
-        header.setForeground(ColorPalette.TEXT);
+        header.setBackground(ColorPalette.TEXT_MUTED); // Fundo escuro do cabeçalho da tabela
+        header.setForeground(ColorPalette.WHITE_TEXT); // Texto branco do cabeçalho da tabela
 
         JScrollPane scrollPane = new JScrollPane(tabelaClientes);
         scrollPane.setBorder(BorderFactory.createLineBorder(ColorPalette.BORDER_COLOR));
+        scrollPane.setBackground(ColorPalette.TEXT); // Fundo escuro do scrollPane
+        scrollPane.getViewport().setBackground(ColorPalette.TEXT); // Fundo escuro do viewport do scrollPane
         tablePanel.add(scrollPane, BorderLayout.CENTER);
 
         return tablePanel;
@@ -97,22 +106,17 @@ public class SelecaoClienteScreen extends JDialog {
 
     private JPanel createButtonsPanel() {
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        buttonsPanel.setOpaque(false);
+        buttonsPanel.setBackground(ColorPalette.TEXT); // Fundo escuro
 
-        JButton consumidorNaoIdentificadoButton = new JButton("Consumidor Não Identificado");
-        consumidorNaoIdentificadoButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JButton consumidorNaoIdentificadoButton = createButton("Consumidor Não Identificado");
         consumidorNaoIdentificadoButton.addActionListener(e -> onConsumidorNaoIdentificado());
         buttonsPanel.add(consumidorNaoIdentificadoButton);
 
-        JButton cancelarButton = new JButton("Cancelar");
-        cancelarButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        JButton cancelarButton = createButton("Cancelar");
         cancelarButton.addActionListener(e -> onCancelar());
         buttonsPanel.add(cancelarButton);
 
-        JButton selecionarButton = new JButton("Selecionar Cliente");
-        selecionarButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        selecionarButton.setBackground(ColorPalette.PRIMARY);
-        selecionarButton.setForeground(ColorPalette.WHITE_TEXT);
+        JButton selecionarButton = createButton("Selecionar Cliente");
         selecionarButton.addActionListener(e -> onSelecionar());
         buttonsPanel.add(selecionarButton);
 
@@ -185,5 +189,27 @@ public class SelecaoClienteScreen extends JDialog {
 
     public boolean isConsumidorNaoIdentificado() {
         return consumidorNaoIdentificado;
+    }
+
+    private JButton createButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setFocusPainted(false);
+        button.setBackground(ColorPalette.PRIMARY); // Cor azul
+        button.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
+        button.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent evt) {
+                button.setBackground(ColorPalette.PRIMARY_DARK); // Cor azul mais escura ao passar o mouse
+            }
+
+            public void mouseExited(MouseEvent evt) {
+                button.setBackground(ColorPalette.PRIMARY); // Cor azul normal
+            }
+        });
+
+        return button;
     }
 }

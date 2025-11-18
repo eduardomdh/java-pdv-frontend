@@ -21,7 +21,7 @@ public class MainScreen extends JFrame {
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
-        contentPane.setBackground(ColorPalette.BACKGROUND);
+        contentPane.setBackground(ColorPalette.TEXT); // Fundo escuro
         contentPane.setLayout(new BorderLayout(0, 0));
 
         // Header
@@ -39,13 +39,13 @@ public class MainScreen extends JFrame {
 
     private JPanel createHeader() {
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        headerPanel.setBackground(ColorPalette.TEXT_MUTED); // Cor mais escura para o cabeçalho
         headerPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ColorPalette.BORDER_COLOR));
         headerPanel.setPreferredSize(new Dimension(getWidth(), 60));
 
         JLabel titleLabel = new JLabel("Painel de Gerenciamento");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        titleLabel.setForeground(ColorPalette.TEXT);
+        titleLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         titleLabel.setBorder(new EmptyBorder(0, 20, 0, 0));
         headerPanel.add(titleLabel, BorderLayout.CENTER);
 
@@ -53,7 +53,7 @@ public class MainScreen extends JFrame {
         userPanel.setOpaque(false);
         JLabel userLabel = new JLabel("Olá, " + loggedInUsername);
         userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        userLabel.setForeground(ColorPalette.TEXT_MUTED);
+        userLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         userPanel.add(userLabel);
 
         JButton logoutButton = new JButton("Sair");
@@ -77,7 +77,7 @@ public class MainScreen extends JFrame {
     private JPanel createNavPanel() {
         JPanel navPanel = new JPanel();
         navPanel.setLayout(new BoxLayout(navPanel, BoxLayout.Y_AXIS));
-        navPanel.setBackground(ColorPalette.PANEL_BACKGROUND);
+        navPanel.setBackground(ColorPalette.TEXT_MUTED); // Cor mais escura para o painel de navegação
         navPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, ColorPalette.BORDER_COLOR));
         navPanel.setPreferredSize(new Dimension(220, getHeight()));
 
@@ -96,11 +96,11 @@ public class MainScreen extends JFrame {
 
     private JPanel createMainContentPanel() {
         JPanel mainContentPanel = new JPanel(new BorderLayout());
-        mainContentPanel.setBackground(ColorPalette.BACKGROUND);
+        mainContentPanel.setBackground(ColorPalette.TEXT); // Fundo escuro para o conteúdo principal
         mainContentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         JLabel welcomeLabel = new JLabel("Bem-vindo! Selecione uma opção no menu para começar.", SwingConstants.CENTER);
         welcomeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        welcomeLabel.setForeground(ColorPalette.TEXT_MUTED);
+        welcomeLabel.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         mainContentPanel.add(welcomeLabel, BorderLayout.CENTER);
         return mainContentPanel;
     }
@@ -112,20 +112,20 @@ public class MainScreen extends JFrame {
         button.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setFocusPainted(false);
-        button.setBackground(ColorPalette.PANEL_BACKGROUND);
-        button.setForeground(ColorPalette.TEXT);
+        button.setBackground(ColorPalette.TEXT_MUTED); // Fundo do botão no menu
+        button.setForeground(ColorPalette.WHITE_TEXT); // Texto branco
         button.setBorder(new EmptyBorder(10, 20, 10, 20));
         button.setHorizontalAlignment(SwingConstants.LEFT);
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                button.setBackground(ColorPalette.PRIMARY_LIGHT);
+                button.setBackground(ColorPalette.PRIMARY_DARK); // Cor ao passar o mouse
                 button.setForeground(ColorPalette.WHITE_TEXT);
             }
 
             public void mouseExited(MouseEvent evt) {
-                button.setBackground(ColorPalette.PANEL_BACKGROUND);
-                button.setForeground(ColorPalette.TEXT);
+                button.setBackground(ColorPalette.TEXT_MUTED); // Cor normal
+                button.setForeground(ColorPalette.WHITE_TEXT);
             }
         });
 
